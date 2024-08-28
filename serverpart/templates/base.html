@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="description" content="Готовимся к ОРТ вместе!	Проект направлен на повышение уровня образования в Кыргызстане! Дорогие школьники и не только, теперь у вас есть возможность подготовиться к разделу математики ОРТ - БЕСПЛАТНО.">
+		<!-- <meta http-equiv="refresh" content="0; URL=https://www.shektep.ru/"> -->
+		<link rel="icon" href="/static/media/favicon.ico" type="image/x-icon">
+		<link rel="stylesheet" type="text/css" href="/static/css/navbar-styles.css">
+		<link rel="stylesheet" type="text/css" href="/static/css/authentication.css">
+		<link rel="stylesheet" type="text/css" href="/static/css/mainstyles.css">
+		<link rel="stylesheet" type="text/css" href="/static/css/teststyles.css">
+		<link rel="stylesheet" type="text/css" href="/static/css/tablestyles.css">
+		<link rel="stylesheet" type="text/css" href="/static/css/testspagestyles.css">
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500&family=M+PLUS+Rounded+1c&display=swap" rel="stylesheet">
+		<link rel="icon" href="/static/media/logo2x2.png" type="image/png">
+
+		<title>Шектеп - Подготовка к ОРТ</title>
+</head>
+<body>
+	<header class="header">
+		<div class="navbar">
+
+				<a class="logo" href="{% url 'home' %}">
+					<img src="/static/media/LogoNorm.png" height="40" width="32" alt="Logo">
+					<span>ШЕКТЕП</span>
+				</a>
+
+				<div class="tabs">
+					<a class="tab" href="{% url 'tests' %}"> Варианты
+					</a>
+				</div>
+
+				{% if user.is_authenticated %}
+				<div class="auth-section">
+						<a class="user-name">{{ request.user.username }}</a>
+						<form method="POST" action="{% url 'logout' %}">
+								{% csrf_token %}
+								<button type="submit" class="btn-primary">Выйти</button>
+						</form>
+				</div>
+				{% else %}
+				<div class="auth-section">
+					<a href="{% url 'login' %}" class="btn-primary btn-login">Войти</a>
+				</div>
+				{% endif %}
+
+		</div>
+	</header>
+</body>
+{% block content %}
+
+{% endblock %}
+<footer class="footer">
+	<div class="social-links-container">
+			<div class="social-links">
+
+				<a target="_blank" href="https://t.me/shektep" class="btn-link">
+					<img src="/static/media/telegram-svgrepo-com.svg" alt="SVG Example">Telegram</a>
+
+				<a target="_blank" href="https://www.youtube.com/@shektep" class="btn-link">
+					<img src="/static/media/youtube-svgrepo-com.svg" alt="SVG Example">YouTube</a>
+
+			</div> 
+	</div>
+</footer>
+
+</body>
+</html>

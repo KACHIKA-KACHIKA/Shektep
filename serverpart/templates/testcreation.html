@@ -1,0 +1,213 @@
+{% extends "./base.html" %}
+{% block content %}
+<div class="main-content">
+		{% include "motivatecontent.html" %}
+		
+		<div class="section-container">
+				<div class="section-head">Направления подготовки на платформе </div>
+				<div class="buttons-container">
+						{% for section in sections %}
+								<button class="btn-section" onclick="selectButtonSection(this)" data-section-id="{{ section.id }}">{{ section.name }}</button>
+						{% endfor %}
+								<button class="btn-section" onclick="redirectToTests(this)">Решай готовые варианты</button>
+				</div>
+		</div>
+
+		<div class="subsection-container">
+			
+				<!-- Загрузка разделов из бд -->
+				<div class="vertical-buttons"> </div> 
+
+				<!-- Загрузка тем разделов из бд -->
+				<div class="topics-list"> </div>
+
+				<!-- Добавление кнопки "Создать" -->
+				<div class="start-buttons"> </div>
+		</div>
+</div>
+<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			localStorage.clear();// Очищаем localStorage при загрузке страницы
+
+			/* Отображаем предупреждение пользователю
+			window.onbeforeunload = function (e) {
+				e.returnValue = confirmationMessage; // Стандарт для большинства браузеров
+				var confirmationMessage = 'Внимание! Ваши сохраненные данные будут удалены при обновлении страницы.';
+				return confirmationMessage; // Для старых версий Firefox
+			};*/
+		});
+
+		function loadSubsections(sectionId) {
+				var subsectionsList = document.querySelector('.vertical-buttons');
+				subsectionsList.innerHTML = '';
+				
+				fetch(`/load_subsections/${sectionId}/` ,{
+						method: 'POST',
+						headers: {
+								'Content-Type': 'application/json',
+								'X-CSRFToken': '{{ csrf_token }}',
+						},
+				})// Получаем разделы для выбранного предмета
+				.then(response => response.json())
+				.then(data => {
+						data.forEach(subsection => { // Добавляем разделы на страницу
+								var btn = document.createElement('button');
+								btn.classList.add('btn-subsection');
+								btn.textContent = subsection.name;
+								btn.dataset.subsectionId = subsection.id;
+								btn.onclick = function() {
+										selectButtonSubsection(this);
+								};
+								subsectionsList.appendChild(btn);
+						});
+
+						subsectionsList.childNodes[0].classList.add('selected');
+						loadThemes(subsectionsList.childNodes[0].dataset.subsectionId); // Для первого раздела загружаем темы
+
+						var startButtonsContainer = document.querySelector('.start-buttons'); // Добавляем кнопку "Создать" на страницу
+						var startButton = document.createElement('button');
+						startButton.classList.add('btn-primary', 'btn-start');
+						startButton.textContent = 'Создать';
+						
+						startButton.onclick = function() {
+							redirectToTest();
+						};
+						startButtonsContainer.appendChild(startButton);
+				})
+				.catch(error => {
+						console.error('Ошибка загрузки подразделов:', error);
+				});
+		}
+
+		function selectButtonSubsection(button) {
+				var buttons_section = document.querySelectorAll('.btn-subsection');
+				buttons_section.forEach(function (btn) {
+						btn.classList.remove('selected');
+				});
+				button.classList.add('selected'); // Меняем выделение у выбранной кнопки
+				var selectedSubsectionId = button.dataset.subsectionId;
+				loadThemes(selectedSubsectionId); // Для раздела загружаем темы
+		}
+
+		function selectButtonSection(button) {
+				var selectedSectionId = button.dataset.sectionId;
+				var selectedButtons = document.querySelectorAll('.btn-section');
+				
+				selectedButtons.forEach(function(btn) { //Указываем какая кнопка была выбрана
+						btn.classList.remove('selected');
+				});
+				button.classList.add('selected');
+
+				var buttonsContainer = document.querySelector('.subsection-container');
+				if (buttonsContainer) { //Включаем отображение разделов и тем
+						buttonsContainer.style.display = 'flex';
+				} else {
+						console.error('Элемент с классом "subsection-container" не найден.');
+				}
+
+				loadSubsections(selectedSectionId); // Загружаем разделы для выбранного предмета
+				
+				var buttonsContainer = document.querySelector('.section-container');
+				if (buttonsContainer) {
+						buttonsContainer.style.display = 'none'; //Выключаем блок с предметами
+				} else {
+						console.error('Элемент с классом "section-container" не найден.');
+				}
+		}
+
+		function loadThemes(subsectionId) {
+				var topicsList = document.querySelector('.topics-list');
+				var sectionId = document.querySelector('.buttons-container .selected').dataset.sectionId;
+				
+				var savedCheckboxes = JSON.parse(localStorage.getItem('selected_themes')) || {};// Получаем сохраненные состояния чекбоксов из localStorage
+
+				fetch(`/get_themes/${sectionId}/${subsectionId}/`)// Отправляем AJAX-запрос для получения списка тем с количеством заданий
+				.then(response => response.json())
+				.then(data => {
+						var fragment = document.createDocumentFragment();// Создаем пустой фрагмент для добавления элементов
+						data.forEach(theme => {
+								var checkbox = document.createElement('input');
+								checkbox.type = 'checkbox';
+								checkbox.value = theme.id;
+								
+								// Проверяем, сохранена ли тема для данного раздела
+								if (savedCheckboxes[sectionId] && savedCheckboxes[sectionId].includes(theme.id)) {
+										checkbox.checked = true;
+								}
+
+								checkbox.addEventListener('change', function () {//Добавляем на чекбоксы логику, которая работает с массивом в ls
+										var selectedThemes = savedCheckboxes[sectionId] || []; // Получаем массив выбранных тем для текущего раздела или создаем новый массив, если он не существует
+										var themeIndex = selectedThemes.indexOf(theme.id);
+
+										if (this.checked) {
+												if (themeIndex === -1) {
+														selectedThemes.push(theme.id); // Добавляем ID темы в массив выбранных тем для текущего раздела
+												}
+										} else {
+												if (themeIndex !== -1) {
+														selectedThemes.splice(themeIndex, 1); // Удаляем ID темы из массива выбранных тем для текущего раздела
+												}
+										}
+
+										savedCheckboxes[sectionId] = selectedThemes; // Сохраняем обновленный массив выбранных тем для текущего раздела
+
+										if (selectedThemes.length === 0) { // Проверяем, если массив тем пустой, то удаляем раздел из localStorage
+												delete savedCheckboxes[sectionId];
+										}
+										localStorage.setItem('selected_themes', JSON.stringify(savedCheckboxes)); // Обновляем данные в localStorage
+								});
+								
+								var themeText = document.createTextNode(`${theme.name} (${theme.tasks_count})`); // Создаем текстовый узел с названием темы и количеством заданий
+
+								var label = document.createElement('label');
+								label.appendChild(checkbox);
+								label.appendChild(themeText);
+								fragment.appendChild(label);
+						});
+
+						topicsList.innerHTML = '';
+						topicsList.appendChild(fragment);// Добавляем все элементы из временного фрагмента в список тем
+				})
+				.catch(error => {
+						console.error('Error fetching themes:', error);
+				});
+				console.log(savedCheckboxes);
+		}
+
+		function redirectToTest() {
+				var selected_themes = JSON.parse(localStorage.getItem('selected_themes'));// Проверяем, появились ли selected_themes в localStorage
+				
+				if (JSON.stringify(selected_themes).length > 2){
+						fetch('/get_selected_tasks/', {
+										method: 'POST',
+										headers: {
+												'Content-Type': 'application/json',
+												'X-CSRFToken': '{{ csrf_token }}',
+										},
+										body: JSON.stringify(selected_themes),
+								})
+								.then(response => response.json())
+								.then(data => {
+										if ((Object.keys(data.tasks).length) > 0) {
+												window.location.href = '/test';
+										}
+										else{
+												message = "Чтобы составить тест, нужно выбрать темы с заданиями";
+												alert(message);
+										}
+								})
+								.catch(error => {
+										console.error('Error fetching tasks:', error);
+								});
+					}
+					else{
+								message = "Чтобы составить тест, нужно выбрать темы для решения";
+								alert(message);
+					}
+				
+		}
+		function redirectToTests() {
+				window.location.href = '/tests/';
+		}
+</script>
+{% endblock %}

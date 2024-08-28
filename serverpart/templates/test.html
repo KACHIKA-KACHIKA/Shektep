@@ -1,0 +1,224 @@
+{% extends "./base.html" %}
+{% block content %}
+<div class="main-container-test">
+
+		<div class="main-content-test">
+				{% csrf_token %}
+				<div>Тест не смог сформироваться</div>
+		</div>
+
+		<div class="btn-endtest"> <button class="btn-primary" type="submit" onclick="finishTest()">Завершить тест</button>
+		</div>
+
+</div>
+<script>
+		document.addEventListener('DOMContentLoaded', function () {
+				// Проверка, какими данными формировать тест
+				var selected_themes = JSON.parse(localStorage.getItem('selected_themes'));
+				var test_name = JSON.parse(localStorage.getItem('test_id'));
+				var fetchParams = {};
+				if (selected_themes !== null && selected_themes !== undefined) {
+						fetchParams = {
+								method: 'POST',
+								headers: {
+										'Content-Type': 'application/json',
+										'X-CSRFToken': '{{ csrf_token }}',
+								},
+								body: JSON.stringify(selected_themes),
+						};
+				} 
+				else if (test_name !== null && test_name !== undefined) {
+						fetchParams = {
+								method: 'POST',
+								headers: {
+										'Content-Type': 'application/json',
+										'X-CSRFToken': '{{ csrf_token }}',
+								},
+								body: JSON.stringify({ test_name }),
+						};
+				}
+
+				fetch('/get_selected_tasks/', fetchParams)
+						.then(response => response.json())
+						.then(data => {
+								renderTasks(data.tasks);
+								console.log(Object.keys(data.tasks).length);
+						})
+						.catch(error => {
+								console.error('Error fetching tasks:', error);
+						});
+		});
+
+		function renderTasks(tasks) {
+				var tasksContainer = document.querySelector('.main-content-test');
+				tasksContainer.innerHTML = '';
+				// Цикл для создания элементов заданий
+				tasks.forEach(function(task) {
+						var taskDiv = document.createElement('div');
+						taskDiv.classList.add('task');
+						taskDiv.textContent = 'Задание ' + task.task_number;
+
+						var taskImageDiv = document.createElement('div');
+						taskImageDiv.classList.add('task-image');
+						var taskImage = document.createElement('img');
+						taskImage.src = task.task_image_url;
+						taskImage.alt = 'Task Image';
+						taskImageDiv.appendChild(taskImage);
+
+						var taskOptionsDiv = document.createElement('div');
+						taskOptionsDiv.classList.add('task-options');
+
+						var solutionImageDiv = document.createElement('div');
+						solutionImageDiv.classList.add('solution-image');
+						var solutionImage = document.createElement('img');
+						solutionImage.src = task.solution_image_url;
+						solutionImage.alt = 'Solution Image';
+						solutionImageDiv.appendChild(solutionImage);
+
+						var interactableFieldsDiv = document.createElement('div');
+						interactableFieldsDiv.classList.add('interactable-fields');
+
+						var answerInputDiv = document.createElement('div');
+						answerInputDiv.classList.add('answer-input');
+						var radioLabels = ['А', 'Б', 'В', 'Г'];
+						if (task.section == "Математика - 2 Часть") {
+								radioLabels.push('Д');
+						}
+						radioLabels.forEach(function(label) {
+								var radioLabel = document.createElement('label');
+								var radioInput = document.createElement('input');
+								radioInput.type = 'radio';
+								radioInput.name = 'options_' + task.task_number;
+								var span = document.createElement('span');
+								span.textContent = label;
+								radioLabel.appendChild(radioInput);
+								radioLabel.appendChild(span);
+								answerInputDiv.appendChild(radioLabel);
+						});
+
+						var solutionButton = document.createElement('button');
+						solutionButton.classList.add('btn-primary', 'btn-solution');
+						solutionButton.textContent = 'Решение';
+						solutionButton.onclick = function() {
+								toggleSolution(this);
+						};
+
+						interactableFieldsDiv.appendChild(answerInputDiv);
+						interactableFieldsDiv.appendChild(solutionButton);
+						taskOptionsDiv.appendChild(solutionImageDiv);
+						taskOptionsDiv.appendChild(interactableFieldsDiv);
+						taskDiv.appendChild(taskImageDiv);
+						taskDiv.appendChild(taskOptionsDiv);
+						tasksContainer.appendChild(taskDiv);
+				});
+		}
+
+		function finishTest() {
+				var radioButtons = document.querySelectorAll('input[type="radio"]:checked');
+				var totalTasks = document.querySelectorAll('.task').length;
+				var selectedTasks = radioButtons.length;
+				if(selectedTasks === 0)//Проверка количества отвеченных заданий
+				{
+					return;
+				}
+				if (selectedTasks < totalTasks) {
+						var confirmation = confirm('Вы ответили не на все задания. Вы уверены, что хотите завершить тест?');
+						if (!confirmation) {
+								return; // Пользователь отменил завершение теста, ничего не делаем
+						}
+				}
+
+				// Собираем данные о выбранных ответах по заданиям
+				var selectedAnswers = collectSelectedAnswers();
+				// Отправляем запрос на сервер для получения информации о правильных ответах
+				fetch('/get_correct_answers/', {
+						method: 'POST',
+						headers: {
+								'Content-Type': 'application/json',
+								'X-CSRFToken': '{{ csrf_token }}',
+						},
+						body: JSON.stringify({ selectedAnswers: selectedAnswers }),
+				})
+				.then(response => response.json())
+				.then(data => {
+						createResultsTable(selectedAnswers, data.correctAnswers); // Создаем таблицу с результатами
+						var finishButton = document.querySelector('.btn-endtest .btn-primary');
+						finishButton.textContent = 'Вернуться';
+						finishButton.onclick = function () {
+								window.location.href = "{% url 'home' %}";
+						};
+						finishButton.setAttribute('type', 'button'); // Изменяем тип кнопки, чтобы она не отправляла форму
+				})
+				.catch(error => {
+						console.error('Error fetching correct answers:', error);
+				});
+
+				var SolutionButtons = document.querySelectorAll('.btn-solution');
+				if (SolutionButtons) {
+						SolutionButtons.forEach(function(button) { button.style.display = 'flex'; }); // Открываем кнопки решения
+				} 
+				else {
+						console.error('Элемент с классом "btn-solution" не найден.');
+				}
+		}
+
+		function collectSelectedAnswers() {
+				var selectedAnswers = [];
+				var radioButtons = document.querySelectorAll('input[type="radio"]:checked');
+				radioButtons.forEach(function(radioButton) {
+						var taskNumber = radioButton.name.split('_')[1];
+						var selectedAnswer = radioButton.nextElementSibling.textContent;
+						selectedAnswers.push({ taskNumber: taskNumber, selectedAnswer: selectedAnswer });
+				});
+				return selectedAnswers;
+		}
+
+		function createResultsTable(selectedAnswers, correctAnswers) {
+				var tableContainer = document.createElement('div');
+				tableContainer.classList.add('table-container');
+
+				var resultsTable = document.createElement('table');
+				resultsTable.classList.add('table-custom');
+				var headerRow = resultsTable.insertRow();
+				headerRow.insertCell(0).textContent = 'Номер задания';
+				headerRow.insertCell(1).textContent = 'Выбранный ответ';
+				headerRow.insertCell(2).textContent = 'Правильный ответ';
+
+				selectedAnswers.forEach(function(selectedAnswer) {
+						var taskNumber = selectedAnswer.taskNumber;
+						var selectedAnswerText = selectedAnswer.selectedAnswer;
+						var correctAnswerText = correctAnswers[taskNumber];
+
+						var row = resultsTable.insertRow();
+						row.insertCell(0).textContent = taskNumber;
+
+						var selectedCell = row.insertCell(1);
+						selectedCell.textContent = selectedAnswerText;
+						if (selectedAnswerText === correctAnswerText) {
+								selectedCell.style.backgroundColor = '#8FF57A'; // Зеленый для правильных ответов
+						} else {
+								selectedCell.style.backgroundColor = '#F57A7A'; // Красный для неправильных ответов
+						}
+
+						var correctCell = row.insertCell(2);
+						correctCell.textContent = correctAnswerText;
+				});
+
+				tableContainer.appendChild(resultsTable);
+
+				var resultsContainer = document.querySelector('.main-content-test');
+				resultsContainer.appendChild(tableContainer);
+
+				// Деактивация радиокнопок
+				var radioButtons = document.querySelectorAll('input[type="radio"]');
+				radioButtons.forEach(function(radioButton) {
+						radioButton.disabled = true;
+				});
+}
+
+		function toggleSolution(button) {
+				var solutionImage = button.parentElement.parentElement.querySelector('.solution-image');
+				solutionImage.classList.toggle('show');
+		}
+</script>
+{% endblock %}

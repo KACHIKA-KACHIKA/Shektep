@@ -1,0 +1,86 @@
+{% extends "./base.html" %}
+{% block content %}
+<div class="main-content">
+	{% csrf_token %}
+	
+	{% include "motivatecontent.html" %}
+
+		<div class="tests-container">
+			<div class="tests-textblock"></div>
+		</div>
+</div>
+<script>
+		document.addEventListener('DOMContentLoaded', function() {
+				fetch('/get_tests/', {// Отправляем AJAX-запрос с данными о выбранных темах
+						method: 'POST',
+						headers: {
+								'Content-Type': 'application/json',
+								'X-CSRFToken': '{{ csrf_token }}',
+						},
+				})
+				.then(response => response.json())
+				.then(data => {
+						if (Object.keys(data.tests).length > 0) {
+								var sortedTests = sortTestsBySection(data.tests);
+								// Иначе находим элемент tests-textblock и заменяем текст в нем
+								var testsTextBlock = document.querySelector('.tests-textblock');
+								testsTextBlock.textContent = 'Готовые варианты для решения';
+								testsTextBlock.style.justifyContent = 'flex-start';
+								testsTextBlock.style.marginTop = '';
+								// Если есть элементы, вызываем функцию renderTests
+								renderTests(sortedTests);
+						} else {
+								// Иначе находим элемент tests-textblock и заменяем текст в нем
+								var testsTextBlock = document.querySelector('.tests-textblock');
+								testsTextBlock.textContent = 'Варианты скоро появятся';
+								testsTextBlock.style.justifyContent = 'center';
+								testsTextBlock.style.marginTop = '24px';
+						}
+				})
+				.catch(error => console.error('Ошибка:', error));
+		});
+
+		function sortTestsBySection(tests) {
+				var sortedTests = {};
+				tests.forEach(function(test) {
+						if (!(test.section in sortedTests)) {
+								sortedTests[test.section] = [];
+						}
+						sortedTests[test.section].push(test);
+				});
+				return sortedTests;
+		}
+
+		function renderTests(tests) {
+				var testsContainer = document.querySelector('.tests-container');
+				for (var section in tests) {
+						var sectionParagraph = document.createElement('h2');
+						sectionParagraph.classList.add('section-paragraph');
+						sectionParagraph.textContent = section;
+						testsContainer.appendChild(sectionParagraph);
+						var testsBtnContainer = document.createElement('div');
+						testsBtnContainer.classList.add('testsbuttons-container');
+						testsContainer.appendChild(testsBtnContainer);
+						tests[section].forEach(function(test) {
+								var testButton = document.createElement('button');
+								testButton.classList.add('btn-test');
+								testButton.textContent = test.test_name;
+								testButton.dataset.section = section;
+								testButton.dataset.tasks = JSON.stringify(test.tasks);
+								testButton.onclick = function() {
+										upload(this);
+								};
+								testsBtnContainer.appendChild(testButton);
+						});
+				}
+				
+		}
+
+		function upload(testButton){
+				localStorage.clear();
+				localStorage.setItem('test_id', JSON.stringify(testButton.textContent));
+				window.location.href = '/test';
+		}
+
+</script>
+{% endblock %}

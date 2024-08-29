@@ -14,9 +14,10 @@ urlpatterns = [
 	path('logout/', RedirectView.as_view(url='/'), name='logout'),
 	path('login/', RedirectView.as_view(url='/'), name='login'),
 
-	path('get_themes/<int:section_id>/<int:subsection_id>/', views.get_themes, name='get_themes'),
-	path('load_subsections/<int:section_id>/', views.load_subsections, name='get_themes'),
-	path('get_selected_tasks/', views.get_selected_tasks, name='get_selected_tasks'),
+	path('get_packs/<int:subsection_id>/', views.get_packs, name='get_packs'),
+	path('get_subsections/<int:section_id>/', views.get_subsections, name='get_subsections'),
+	path('get_tasks_for_pack/<int:pack_id>/', views.get_tasks_for_pack, name='get_tasks_for_pack'),
+	# path('get_selected_tasks/', views.get_selected_tasks, name='get_selected_tasks'),
 	path('get_correct_answers/', views.get_correct_answers, name='get_correct_answers'),
 	path('get_tests/', views.get_tests, name='get_tests'),
 ]

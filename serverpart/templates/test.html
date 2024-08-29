@@ -12,106 +12,180 @@
 
 </div>
 <script>
-		document.addEventListener('DOMContentLoaded', function () {
-				// Проверка, какими данными формировать тест
-				var selected_themes = JSON.parse(localStorage.getItem('selected_themes'));
-				var test_name = JSON.parse(localStorage.getItem('test_id'));
-				var fetchParams = {};
-				if (selected_themes !== null && selected_themes !== undefined) {
-						fetchParams = {
-								method: 'POST',
-								headers: {
-										'Content-Type': 'application/json',
-										'X-CSRFToken': '{{ csrf_token }}',
-								},
-								body: JSON.stringify(selected_themes),
-						};
-				} 
-				else if (test_name !== null && test_name !== undefined) {
-						fetchParams = {
-								method: 'POST',
-								headers: {
-										'Content-Type': 'application/json',
-										'X-CSRFToken': '{{ csrf_token }}',
-								},
-								body: JSON.stringify({ test_name }),
-						};
-				}
+    document.addEventListener('DOMContentLoaded', function () {
+        var tasks = {{ tasks_data | safe }};  // Задания, переданные из контекста
+        if (tasks && tasks.length > 0) {
+            renderTasks(tasks);
+        } else {
+            console.error('Нет доступных заданий.');
+        }
+    });
 
-				fetch('/get_selected_tasks/', fetchParams)
-						.then(response => response.json())
-						.then(data => {
-								renderTasks(data.tasks);
-								console.log(Object.keys(data.tasks).length);
-						})
-						.catch(error => {
-								console.error('Error fetching tasks:', error);
-						});
-		});
+    function renderTasks(tasks) {
+        var tasksContainer = document.querySelector('.main-content-test');
+        tasksContainer.innerHTML = '';  // Очищаем контейнер
 
-		function renderTasks(tasks) {
-				var tasksContainer = document.querySelector('.main-content-test');
-				tasksContainer.innerHTML = '';
-				// Цикл для создания элементов заданий
-				tasks.forEach(function(task) {
-						var taskDiv = document.createElement('div');
-						taskDiv.classList.add('task');
-						taskDiv.textContent = 'Задание ' + task.task_number;
+        // Цикл для создания элементов заданий
+        tasks.forEach(function(task) {
+            var taskDiv = document.createElement('div');
+            taskDiv.classList.add('task');
+            taskDiv.textContent = 'Задание ' + task.task_number;
 
-						var taskImageDiv = document.createElement('div');
-						taskImageDiv.classList.add('task-image');
-						var taskImage = document.createElement('img');
-						taskImage.src = task.task_image_url;
-						taskImage.alt = 'Task Image';
-						taskImageDiv.appendChild(taskImage);
+            var taskImageDiv = document.createElement('div');
+            taskImageDiv.classList.add('task-image');
+            var taskImage = document.createElement('img');
+            taskImage.src = task.task_image_url;
+            taskImage.alt = 'Task Image';
+            taskImageDiv.appendChild(taskImage);
 
-						var taskOptionsDiv = document.createElement('div');
-						taskOptionsDiv.classList.add('task-options');
+            var taskOptionsDiv = document.createElement('div');
+            taskOptionsDiv.classList.add('task-options');
 
-						var solutionImageDiv = document.createElement('div');
-						solutionImageDiv.classList.add('solution-image');
-						var solutionImage = document.createElement('img');
-						solutionImage.src = task.solution_image_url;
-						solutionImage.alt = 'Solution Image';
-						solutionImageDiv.appendChild(solutionImage);
+            // var solutionImageDiv = document.createElement('div');
+            // solutionImageDiv.classList.add('solution-image');
+            // var solutionImage = document.createElement('img');
+            // solutionImage.src = task.solution_image_url;
+            // solutionImage.alt = 'Solution Image';
+            // solutionImageDiv.appendChild(solutionImage);
 
-						var interactableFieldsDiv = document.createElement('div');
-						interactableFieldsDiv.classList.add('interactable-fields');
+            var interactableFieldsDiv = document.createElement('div');
+            interactableFieldsDiv.classList.add('interactable-fields');
 
-						var answerInputDiv = document.createElement('div');
-						answerInputDiv.classList.add('answer-input');
-						var radioLabels = ['А', 'Б', 'В', 'Г'];
-						if (task.section == "Математика - 2 Часть") {
+            var answerInputDiv = document.createElement('div');
+            answerInputDiv.classList.add('answer-input');
+            var radioLabels = ['А', 'Б', 'В', 'Г'];
+						console.log(task.subsection);
+						if (task.subsection == "Часть 2") {
 								radioLabels.push('Д');
 						}
-						radioLabels.forEach(function(label) {
-								var radioLabel = document.createElement('label');
-								var radioInput = document.createElement('input');
-								radioInput.type = 'radio';
-								radioInput.name = 'options_' + task.task_number;
-								var span = document.createElement('span');
-								span.textContent = label;
-								radioLabel.appendChild(radioInput);
-								radioLabel.appendChild(span);
-								answerInputDiv.appendChild(radioLabel);
-						});
 
-						var solutionButton = document.createElement('button');
-						solutionButton.classList.add('btn-primary', 'btn-solution');
-						solutionButton.textContent = 'Решение';
-						solutionButton.onclick = function() {
-								toggleSolution(this);
-						};
+            radioLabels.forEach(function(label) {
+                var radioLabel = document.createElement('label');
+                var radioInput = document.createElement('input');
+                radioInput.type = 'radio';
+                radioInput.name = 'options_' + task.id;
+                var span = document.createElement('span');
+                span.textContent = label;
+                radioLabel.appendChild(radioInput);
+                radioLabel.appendChild(span);
+                answerInputDiv.appendChild(radioLabel);
+            });
 
-						interactableFieldsDiv.appendChild(answerInputDiv);
-						interactableFieldsDiv.appendChild(solutionButton);
-						taskOptionsDiv.appendChild(solutionImageDiv);
-						taskOptionsDiv.appendChild(interactableFieldsDiv);
-						taskDiv.appendChild(taskImageDiv);
-						taskDiv.appendChild(taskOptionsDiv);
-						tasksContainer.appendChild(taskDiv);
-				});
-		}
+            // var solutionButton = document.createElement('button');
+            // solutionButton.classList.add('btn-primary', 'btn-solution');
+            // solutionButton.textContent = 'Решение';
+            // solutionButton.onclick = function() {
+            //     toggleSolution(this);
+            // };
+
+            interactableFieldsDiv.appendChild(answerInputDiv);
+            // interactableFieldsDiv.appendChild(solutionButton);
+            // taskOptionsDiv.appendChild(solutionImageDiv);
+            taskOptionsDiv.appendChild(interactableFieldsDiv);
+            taskDiv.appendChild(taskImageDiv);
+            taskDiv.appendChild(taskOptionsDiv);
+            tasksContainer.appendChild(taskDiv);
+        });
+    }
+		// document.addEventListener('DOMContentLoaded', function () {
+		// 		var selected_themes = JSON.parse(localStorage.getItem('selected_themes'));
+		// 		var test_name = JSON.parse(localStorage.getItem('test_id'));
+		// 		var fetchParams = {};
+		// 		if (selected_themes !== null && selected_themes !== undefined) {
+		// 				fetchParams = {
+		// 						method: 'POST',
+		// 						headers: {
+		// 								'Content-Type': 'application/json',
+		// 								'X-CSRFToken': '{{ csrf_token }}',
+		// 						},
+		// 						body: JSON.stringify(selected_themes),
+		// 				};
+		// 		} 
+		// 		else if (test_name !== null && test_name !== undefined) {
+		// 				fetchParams = {
+		// 						method: 'POST',
+		// 						headers: {
+		// 								'Content-Type': 'application/json',
+		// 								'X-CSRFToken': '{{ csrf_token }}',
+		// 						},
+		// 						body: JSON.stringify({ test_name }),
+		// 				};
+		// 		}
+
+		// 		fetch('/get_selected_tasks/', fetchParams)
+		// 				.then(response => response.json())
+		// 				.then(data => {
+		// 						renderTasks(data.tasks);
+		// 						console.log(Object.keys(data.tasks).length);
+		// 				})
+		// 				.catch(error => {
+		// 						console.error('Error fetching tasks:', error);
+		// 				});
+		// });
+
+		// function renderTasks(tasks) {
+		// 		var tasksContainer = document.querySelector('.main-content-test');
+		// 		tasksContainer.innerHTML = '';
+		// 		// Цикл для создания элементов заданий
+		// 		tasks.forEach(function(task) {
+		// 				var taskDiv = document.createElement('div');
+		// 				taskDiv.classList.add('task');
+		// 				taskDiv.textContent = 'Задание ' + task.task_number;
+
+		// 				var taskImageDiv = document.createElement('div');
+		// 				taskImageDiv.classList.add('task-image');
+		// 				var taskImage = document.createElement('img');
+		// 				taskImage.src = task.task_image_url;
+		// 				taskImage.alt = 'Task Image';
+		// 				taskImageDiv.appendChild(taskImage);
+
+		// 				var taskOptionsDiv = document.createElement('div');
+		// 				taskOptionsDiv.classList.add('task-options');
+
+		// 				var solutionImageDiv = document.createElement('div');
+		// 				solutionImageDiv.classList.add('solution-image');
+		// 				var solutionImage = document.createElement('img');
+		// 				solutionImage.src = task.solution_image_url;
+		// 				solutionImage.alt = 'Solution Image';
+		// 				solutionImageDiv.appendChild(solutionImage);
+
+		// 				var interactableFieldsDiv = document.createElement('div');
+		// 				interactableFieldsDiv.classList.add('interactable-fields');
+
+		// 				var answerInputDiv = document.createElement('div');
+		// 				answerInputDiv.classList.add('answer-input');
+		// 				var radioLabels = ['А', 'Б', 'В', 'Г'];
+		// 				if (task.section == "Математика - 2 Часть") {
+		// 						radioLabels.push('Д');
+		// 				}
+		// 				radioLabels.forEach(function(label) {
+		// 						var radioLabel = document.createElement('label');
+		// 						var radioInput = document.createElement('input');
+		// 						radioInput.type = 'radio';
+		// 						radioInput.name = 'options_' + task.task_number;
+		// 						var span = document.createElement('span');
+		// 						span.textContent = label;
+		// 						radioLabel.appendChild(radioInput);
+		// 						radioLabel.appendChild(span);
+		// 						answerInputDiv.appendChild(radioLabel);
+		// 				});
+
+		// 				var solutionButton = document.createElement('button');
+		// 				solutionButton.classList.add('btn-primary', 'btn-solution');
+		// 				solutionButton.textContent = 'Решение';
+		// 				solutionButton.onclick = function() {
+		// 						toggleSolution(this);
+		// 				};
+
+		// 				interactableFieldsDiv.appendChild(answerInputDiv);
+		// 				interactableFieldsDiv.appendChild(solutionButton);
+		// 				taskOptionsDiv.appendChild(solutionImageDiv);
+		// 				taskOptionsDiv.appendChild(interactableFieldsDiv);
+		// 				taskDiv.appendChild(taskImageDiv);
+		// 				taskDiv.appendChild(taskOptionsDiv);
+		// 				tasksContainer.appendChild(taskDiv);
+		// 		});
+		// }
 
 		function finishTest() {
 				var radioButtons = document.querySelectorAll('input[type="radio"]:checked');
@@ -166,9 +240,9 @@
 				var selectedAnswers = [];
 				var radioButtons = document.querySelectorAll('input[type="radio"]:checked');
 				radioButtons.forEach(function(radioButton) {
-						var taskNumber = radioButton.name.split('_')[1];
+						var task_id = radioButton.name.split('_')[1];
 						var selectedAnswer = radioButton.nextElementSibling.textContent;
-						selectedAnswers.push({ taskNumber: taskNumber, selectedAnswer: selectedAnswer });
+						selectedAnswers.push({ task_id: task_id, selectedAnswer: selectedAnswer });
 				});
 				return selectedAnswers;
 		}
@@ -185,12 +259,12 @@
 				headerRow.insertCell(2).textContent = 'Правильный ответ';
 
 				selectedAnswers.forEach(function(selectedAnswer) {
-						var taskNumber = selectedAnswer.taskNumber;
+						var task_id = selectedAnswer.task_id;
 						var selectedAnswerText = selectedAnswer.selectedAnswer;
-						var correctAnswerText = correctAnswers[taskNumber];
+						var correctAnswerText = correctAnswers[task_id];
 
 						var row = resultsTable.insertRow();
-						row.insertCell(0).textContent = taskNumber;
+						row.insertCell(0).textContent = task_id;
 
 						var selectedCell = row.insertCell(1);
 						selectedCell.textContent = selectedAnswerText;

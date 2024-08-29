@@ -2,7 +2,7 @@ import json
 from django.shortcuts import get_object_or_404, render, redirect
 from django.db import IntegrityError
 from django.http import JsonResponse
-from .models import Section, Task, Subsection, Theme, Test
+from .models import Section, Task, Subsection, Pack, Test
 from django.contrib.auth import login,logout,authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
@@ -84,11 +84,11 @@ def get_correct_answers(request):
 				correct_answers = {}
 
 				for answer in selected_answers: # Получаем правильные ответы на задания
-						task_number = answer['taskNumber']
-						task = Task.objects.filter(task_number=task_number).first()
+						task_id = answer['task_id']
+						task = Task.objects.filter(id=task_id).first()
 						if task:
 								correct_answer = task.answer
-								correct_answers[task_number] = correct_answer
+								correct_answers[task_id] = correct_answer
 
 				return JsonResponse({'correctAnswers': correct_answers})
 		else:
@@ -100,28 +100,45 @@ def test_creation_page(request):
 		subsections = Subsection.objects.all()
 		return render(request, 'testcreation.html', {'sections': sections, 'subsections': subsections})
 
-# Возвращает темы для раздела
-def get_themes(request, section_id, subsection_id):
-		section = get_object_or_404(Section, id=section_id)
-		subsection = get_object_or_404(Subsection, id=subsection_id)
+def get_packs(request, subsection_id):
+    packs = Pack.objects.filter(subsection_id=subsection_id)
+    packs_data = [{'id': pack.id} for pack in packs]
+    return JsonResponse(packs_data, safe=False)
 
-		themes = Theme.objects.filter(subsection=subsection) # Выбираем все темы для раздела
-		themes_info = []
-		for theme in themes:
-				tasks_count = Task.objects.filter(theme=theme, section=section).count()
-				theme_info = {
-						'id': theme.id,
-						'name': theme.name,
-						'tasks_count': tasks_count
-				}
-				themes_info.append(theme_info)
+def get_tasks_for_pack(request, pack_id):
+    # Получаем все задания для выбранного пака
+    tasks = Task.objects.filter(pack_id=pack_id)
+    pack = Pack.objects.get(id=pack_id)
+    subsection = Subsection.objects.filter(id=pack.subsection_id).values('name').first()
+    print(subsection)
+    # Формируем данные для шаблона
+    tasks_data = [
+        {
+            'id': task.id,
+            'task_number': index + 1,  # Номер задания в паке
+            'task_image_url': task.task_image.url,  # URL изображения задания
+						'subsection': subsection,
+        }
+        for index, task in enumerate(tasks)
+    ]
+    
+    # Получаем текст из пака (если такой есть)
+    pack_text = Pack.objects.filter(id=pack_id).values('text_field').first()
+    
+    # Передаем данные в шаблон для рендеринга
+    return render(request, 'test.html', { 'pack_text': pack_text, 'tasks_data': tasks_data })
 
-		return JsonResponse(list(themes_info), safe=False)
+# def get_tasks_for_pack(request, pack_id):
+#     tasks = Task.objects.filter(pack_id=pack_id)
+#     tasks_data = [{'id': task.id} for task in tasks]
+#     pack_text = Pack.objects.filter(id=pack_id).values('text_field').first()
+#     return render(request, 'test.html', { 'pack_text': pack_text, 'tasks_data': tasks_data})
+    # return JsonResponse({'tasks': tasks_data})
 
 # Возвращает предметы в зависимости от раздела
-def load_subsections(request, section_id):
+def get_subsections(request, section_id):
 		if request.method == 'POST':
-				subsections = Subsection.objects.all().values('id', 'name')
+				subsections = Subsection.objects.filter(section_id=section_id).values('id', 'name')
 				subsections_data = list(subsections)
 				return JsonResponse(subsections_data, safe=False)
 		else:

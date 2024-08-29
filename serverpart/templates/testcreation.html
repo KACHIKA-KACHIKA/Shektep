@@ -41,7 +41,7 @@
 				var subsectionsList = document.querySelector('.vertical-buttons');
 				subsectionsList.innerHTML = '';
 				
-				fetch(`/load_subsections/${sectionId}/` ,{
+				fetch(`/get_subsections/${sectionId}/` ,{
 						method: 'POST',
 						headers: {
 								'Content-Type': 'application/json',
@@ -62,7 +62,7 @@
 						});
 
 						subsectionsList.childNodes[0].classList.add('selected');
-						loadThemes(subsectionsList.childNodes[0].dataset.subsectionId); // Для первого раздела загружаем темы
+						loadPacks(subsectionsList.childNodes[0].dataset.subsectionId); // Для первого раздела загружаем темы
 
 						var startButtonsContainer = document.querySelector('.start-buttons'); // Добавляем кнопку "Создать" на страницу
 						var startButton = document.createElement('button');
@@ -86,7 +86,7 @@
 				});
 				button.classList.add('selected'); // Меняем выделение у выбранной кнопки
 				var selectedSubsectionId = button.dataset.subsectionId;
-				loadThemes(selectedSubsectionId); // Для раздела загружаем темы
+				loadPacks(selectedSubsectionId); // Для раздела загружаем темы
 		}
 
 		function selectButtonSection(button) {
@@ -115,65 +115,95 @@
 				}
 		}
 
-		function loadThemes(subsectionId) {
-				var topicsList = document.querySelector('.topics-list');
-				var sectionId = document.querySelector('.buttons-container .selected').dataset.sectionId;
+		// function loadPacks(subsectionId) {
+		// 		var topicsList = document.querySelector('.topics-list');
+		// 		var sectionId = document.querySelector('.buttons-container .selected').dataset.sectionId;
 				
-				var savedCheckboxes = JSON.parse(localStorage.getItem('selected_themes')) || {};// Получаем сохраненные состояния чекбоксов из localStorage
+		// 		var savedCheckboxes = JSON.parse(localStorage.getItem('selected_themes')) || {};// Получаем сохраненные состояния чекбоксов из localStorage
 
-				fetch(`/get_themes/${sectionId}/${subsectionId}/`)// Отправляем AJAX-запрос для получения списка тем с количеством заданий
-				.then(response => response.json())
-				.then(data => {
-						var fragment = document.createDocumentFragment();// Создаем пустой фрагмент для добавления элементов
-						data.forEach(theme => {
-								var checkbox = document.createElement('input');
-								checkbox.type = 'checkbox';
-								checkbox.value = theme.id;
+		// 		fetch(`/get_packs/${sectionId}/${subsectionId}/`)// Отправляем AJAX-запрос для получения списка тем с количеством заданий
+		// 		.then(response => response.json())
+		// 		.then(data => {
+		// 				var fragment = document.createDocumentFragment();// Создаем пустой фрагмент для добавления элементов
+		// 				data.forEach(theme => {
+		// 						var checkbox = document.createElement('input');
+		// 						checkbox.type = 'checkbox';
+		// 						checkbox.value = theme.id;
 								
-								// Проверяем, сохранена ли тема для данного раздела
-								if (savedCheckboxes[sectionId] && savedCheckboxes[sectionId].includes(theme.id)) {
-										checkbox.checked = true;
-								}
+		// 						// Проверяем, сохранена ли тема для данного раздела
+		// 						if (savedCheckboxes[sectionId] && savedCheckboxes[sectionId].includes(theme.id)) {
+		// 								checkbox.checked = true;
+		// 						}
 
-								checkbox.addEventListener('change', function () {//Добавляем на чекбоксы логику, которая работает с массивом в ls
-										var selectedThemes = savedCheckboxes[sectionId] || []; // Получаем массив выбранных тем для текущего раздела или создаем новый массив, если он не существует
-										var themeIndex = selectedThemes.indexOf(theme.id);
+		// 						checkbox.addEventListener('change', function () {//Добавляем на чекбоксы логику, которая работает с массивом в ls
+		// 								var selectedThemes = savedCheckboxes[sectionId] || []; // Получаем массив выбранных тем для текущего раздела или создаем новый массив, если он не существует
+		// 								var themeIndex = selectedThemes.indexOf(theme.id);
 
-										if (this.checked) {
-												if (themeIndex === -1) {
-														selectedThemes.push(theme.id); // Добавляем ID темы в массив выбранных тем для текущего раздела
-												}
-										} else {
-												if (themeIndex !== -1) {
-														selectedThemes.splice(themeIndex, 1); // Удаляем ID темы из массива выбранных тем для текущего раздела
-												}
-										}
+		// 								if (this.checked) {
+		// 										if (themeIndex === -1) {
+		// 												selectedThemes.push(theme.id); // Добавляем ID темы в массив выбранных тем для текущего раздела
+		// 										}
+		// 								} else {
+		// 										if (themeIndex !== -1) {
+		// 												selectedThemes.splice(themeIndex, 1); // Удаляем ID темы из массива выбранных тем для текущего раздела
+		// 										}
+		// 								}
 
-										savedCheckboxes[sectionId] = selectedThemes; // Сохраняем обновленный массив выбранных тем для текущего раздела
+		// 								savedCheckboxes[sectionId] = selectedThemes; // Сохраняем обновленный массив выбранных тем для текущего раздела
 
-										if (selectedThemes.length === 0) { // Проверяем, если массив тем пустой, то удаляем раздел из localStorage
-												delete savedCheckboxes[sectionId];
-										}
-										localStorage.setItem('selected_themes', JSON.stringify(savedCheckboxes)); // Обновляем данные в localStorage
+		// 								if (selectedThemes.length === 0) { // Проверяем, если массив тем пустой, то удаляем раздел из localStorage
+		// 										delete savedCheckboxes[sectionId];
+		// 								}
+		// 								localStorage.setItem('selected_themes', JSON.stringify(savedCheckboxes)); // Обновляем данные в localStorage
+		// 						});
+								
+		// 						var themeText = document.createTextNode(`${theme.name} (${theme.tasks_count})`); // Создаем текстовый узел с названием темы и количеством заданий
+
+		// 						var label = document.createElement('label');
+		// 						label.appendChild(checkbox);
+		// 						label.appendChild(themeText);
+		// 						fragment.appendChild(label);
+		// 				});
+
+		// 				topicsList.innerHTML = '';
+		// 				topicsList.appendChild(fragment);// Добавляем все элементы из временного фрагмента в список тем
+		// 		})
+		// 		.catch(error => {
+		// 				console.error('Error fetching themes:', error);
+		// 		});
+		// 		console.log(savedCheckboxes);
+		// }
+		function loadPacks(subsectionId) {
+				var packsList = document.querySelector('.topics-list');  // Элемент, куда будут добавляться кнопки паков
+				var sectionId = document.querySelector('.buttons-container .selected').dataset.sectionId;  // ID выбранной секции
+
+				fetch(`/get_packs/${subsectionId}/`)  // Отправляем AJAX-запрос для получения списка паков
+						.then(response => response.json())
+						.then(data => {
+								var fragment = document.createDocumentFragment();  // Создаем пустой фрагмент для добавления элементов
+								data.forEach(pack => {
+										var btn = document.createElement('button');
+										btn.classList.add('btn-pack');  // Добавляем классы для кнопки пака
+										btn.textContent = "Тест " + pack.id;  // Название пака
+										btn.dataset.packId = pack.id;  // ID пака для отправки на бэк
+
+										btn.addEventListener('click', function() {
+												redirectToPackTest(pack.id);  // Вызываем функцию для перенаправления на страницу теста по ID пака
+										});
+
+										fragment.appendChild(btn);  // Добавляем кнопку в фрагмент
 								});
-								
-								var themeText = document.createTextNode(`${theme.name} (${theme.tasks_count})`); // Создаем текстовый узел с названием темы и количеством заданий
 
-								var label = document.createElement('label');
-								label.appendChild(checkbox);
-								label.appendChild(themeText);
-								fragment.appendChild(label);
+								packsList.innerHTML = '';  // Очищаем предыдущие паки
+								packsList.appendChild(fragment);  // Добавляем все элементы из фрагмента на страницу
+						})
+						.catch(error => {
+								console.error('Error fetching packs:', error);
 						});
-
-						topicsList.innerHTML = '';
-						topicsList.appendChild(fragment);// Добавляем все элементы из временного фрагмента в список тем
-				})
-				.catch(error => {
-						console.error('Error fetching themes:', error);
-				});
-				console.log(savedCheckboxes);
 		}
-
+		function redirectToPackTest(packId) {
+				window.location.href = `/get_tasks_for_pack/${packId}/`;  // Перенаправляем пользователя на страницу с тестом для выбранного пака
+		}
 		function redirectToTest() {
 				var selected_themes = JSON.parse(localStorage.getItem('selected_themes'));// Проверяем, появились ли selected_themes в localStorage
 				

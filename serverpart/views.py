@@ -34,47 +34,6 @@ def tests_page(request):
 		tests = Test.objects.all()
 		return render(request, 'tests.html', {'tests': tests})
 
-# Возвращает список заданий
-def get_selected_tasks(request):
-		if request.method == 'POST':
-				fetchParams = json.loads(request.body)
-				task_list = []
-				
-				if 'test_name' in fetchParams:
-						# Если присутствует test_name, используем его для получения заданий по имени теста
-						test_name = fetchParams['test_name']
-						tasks = Test.objects.get(name=test_name).tasks.all()
-				else:
-						# Иначе, используем выбранные темы для получения заданий
-						all_tasks = Task.objects.none()  # Создаем пустой QuerySet
-
-						if fetchParams:  # Проверка на пустой тест
-								for section_id, themes_ids in fetchParams.items():
-										if themes_ids:  # Проверяем, выбрана ли хотя бы одна тема для данного раздела
-												tasks = Task.objects.filter(theme__id__in=themes_ids, section__id=section_id)
-												all_tasks |= tasks  # Добавляем найденные задания к общему QuerySet
-										else:  # Если для данного раздела не выбрано ни одной темы, добавляем все задания из этого раздела
-												tasks = Task.objects.filter(section__id=section_id)
-												all_tasks |= tasks  # Добавляем найденные задания к общему QuerySet
-
-						if not all_tasks:  # Если общий QuerySet пустой, значит ни одна тема не была выбрана
-								all_tasks = Task.objects.all()  # Получаем все задания
-
-				for task in tasks:
-						section_name = task.section.name if task.section else "Неопределенный раздел"
-						task_info = {
-								'task_number': task.task_number,
-								# 'task_image_url': task.task_image.url.replace('task_images/', 'ort/media/task_images/'),
-								# 'solution_image_url': task.solution_image.url.replace('solution_images/', 'ort/media/solution_images/') if task.solution_image else None,
-								'task_image_url': task.task_image.url.replace('task_images/', 'task_images/'),
-								'solution_image_url': task.solution_image.url.replace('solution_images/', 'solution_images/') if task.solution_image else None,
-								'section': section_name,
-						}
-						task_list.append(task_info)
-
-				return JsonResponse({'tasks': task_list})
-		else:
-				return JsonResponse({'error': 'Invalid request method'})
 
 # Возвращает ответы на решеные задачи 
 def get_correct_answers(request):

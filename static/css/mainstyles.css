@@ -41,6 +41,7 @@ footer{
 }
 .subsection-container{
 	display: flex;
+	flex-wrap: wrap;
 	padding-top: 24px;
 	width: 100%;
 	justify-content: space-around;
@@ -49,26 +50,48 @@ footer{
 
 .vertical-buttons {
 	display: flex;
-	flex-direction: column;
-	align-content: flex-start;
+	width: 100%;
+	justify-content: center;
 	align-items: center;
 }
 .btn-subsection {
 	background-color: #DCEEFF;
 	color: #000000;
 
-	padding: 12px 36px;
-	margin-bottom: 20px;
+	padding: 20px 10px;
+	margin-right: 10px;
 
 	border: none;
 	border-radius: 16px;
 
 	cursor: pointer;
-	width: 100%;
+	width: 22%;
+	height: 100%;
+
+	font-family: "M PLUS Rounded 1c";
+	font-size: 26px;
+	text-decoration: none;
+}
+.btn-pack {
+	background-color: #ffffff;
+	color: #000000;
+
+	padding: 12px 36px;
+	margin-left: 10px;
+	margin-bottom: 20px;
+
+	border-width: 1px;
+	border-color: #000000;
+	border-radius: 60px;
+
+	cursor: pointer;
 
 	font-family: "M PLUS Rounded 1c";
 	font-size: 21px;
 	text-decoration: none;
+}
+.btn-pack:hover {
+	background-color: #DCEEFF;
 }
 .btn-subsection:hover {
 	background-color: #7bbaf4;
@@ -79,10 +102,11 @@ footer{
 
 .topics-list {
 	display: flex;
-	flex-direction: column;
-	align-items: flex-start; /* Выравнивание элементов влево */
+	flex-wrap: wrap;
+	align-items: center; /* Выравнивание элементов влево */
 
-	width: 74%;
+	margin-top: 20px;
+	width: 100%;
 	margin-left: 10px;
 	flex-grow: 1;
 	font-size: 22px;
@@ -170,7 +194,7 @@ footer{
 }
 .buttons-container {
 	display: flex;
-	justify-content: space-evenly;
+	justify-content: center;
 	flex-wrap: wrap;
 	
 	margin: auto;
@@ -186,6 +210,8 @@ footer{
 	width: calc(30% - 0px);
 	padding: 44px 12px;
 	margin-bottom: 20px;
+	
+	margin-left: 20px;
 	border: none;
 	border-radius: 16px;
 
@@ -276,6 +302,7 @@ footer{
 	}
 	.topics-list {
 		margin-left: 0px;
+		justify-content: center;
 	}
 
 	.motivate-text-steps{
@@ -301,6 +328,7 @@ footer{
 
 	.btn-subsection {
 		width: 150%;
+		/* margin-left: 10px; */
 	}
 	.motivate-text-head{
 		font-size: 22px;
@@ -313,5 +341,7 @@ footer{
 	.btn-section {
 		font-size: 18px;
 		width: calc(50% - 10px);
+		margin-bottom: 10px;
+    margin-left: 10px;
 	}
 }

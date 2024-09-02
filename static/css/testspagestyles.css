@@ -1,6 +1,7 @@
 .tests-textblock{
 	display: flex;
-	justify-content: flex-start;
+	justify-content: center;
+	margin-top: 24px;
 	font-family: "M PLUS Rounded 1c";
 	font-size: 28px;
 	text-decoration: none;

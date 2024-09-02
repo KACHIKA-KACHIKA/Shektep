@@ -37,7 +37,7 @@ class Task(models.Model):
     ]
     
     answer = models.TextField(choices=ANSWER_CHOICES)
-    pack = models.ForeignKey(Pack, on_delete=models.CASCADE)  # Связь с Pack
+    pack_id = models.ForeignKey(Pack, on_delete=models.CASCADE)  # Связь с Pack
 
     def __str__(self):
         return f"Task {self.task_image}"

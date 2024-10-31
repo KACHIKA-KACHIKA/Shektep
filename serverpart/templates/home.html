@@ -1,0 +1,126 @@
+{% extends "./base.html" %}
+{% block content %}
+
+<main class="main-content-home" style="background-color: #f6f6f6;">
+	<section class="section-block fade-in-block bottom" style="background-color: #ffffff">
+		<div class="home-section-container">
+			<div class="banner-block">
+				<div class="banner-block-text">
+					<h2>
+						Готовим к ОРТ на высокие баллы
+						и обьясняем сложное простым
+						языком
+					</h2>
+					<p>
+						Онлайн школа направленная на
+						повышение уровня образования
+						в Кыргызстане!
+					</p>
+				</div>
+				<div class="banner-photo">
+					<img src="/static/media/homepage/manas.png" alt="манас">
+				</div>
+				<form action="{% url 'tests' %}" style="width: 100%;">
+					<button class="btn-start">Решать задания</button>
+				</form>
+			</div>
+		</div>
+	</section>
+
+	<section class="section-block fade-in-block bottom">
+		<div class="home-section-container">
+			<div class="motivate-text">
+				<div class="text-head ">Для кого</div>
+				<div class="motivate-text-steps">
+					<a class="motivate-text-step">
+						Учишься в школе и<br>
+						планируешь сдавать ОРТ
+					</a>
+					<a class="motivate-text-step">
+						Хочешь получить золотой<br>
+						сертификат
+					</a>
+					<a class="motivate-text-step">
+						Боишься, что базовых знаний<br>
+						не достаточно.
+					</a>
+					<a class="motivate-text-step">
+						Теряешь мотивацию<br>
+						в подготовке
+					</a>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="section-block fade-in-block bottom" style="background-color: #7BBCFF">
+		<div class="home-section-container">
+			<div class="subscriprion-block">
+				<div class="text-head "> Что входит в подписку?</div>
+
+				<div class="subscriprion-items">
+
+					<div class="item">
+						<div class="item-name"> Видео-разборы </div>
+						<div class="item-description">
+							<p>После каждого теста будет досутпно видео, в котором объясняется решение задач</p>
+							<img src="/static/media/homepage/video_example.png" alt="">
+						</div>
+					</div>
+
+					<div class="item">
+						<div class="item-name">Пробники</div>
+						<div class="item-description">
+							<p>Решай экзамены сразу из нескольких разделов и старайся пройти необходимый порог</p>
+							<img src="/static/media/homepage/Exams.png" alt="">
+						</div>
+					</div>
+
+					<div class="item">
+						<div class="item-name">Статистика</div>
+						<div class="item-description">
+							<p>Следи за своим прогрессом и улучшай свои результаты, они будут отображаться рядом со всеми тестами </p>
+							<img src="/static/media/homepage/Test_progress.png" alt="">
+						</div>
+					</div>
+
+				</div>
+				<div class="subscribe-button-space">
+					<div class="subscribe-discription"> *Также будут доступны все эфиры в записи</div>
+					<!-- <a class="subscribe-button" style="border: none;" target="_blank" href="">Записаться</a> -->
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="section-block fade-in-block bottom">
+		<div class="home-section-container">
+			<div class="social-media-block">
+				<div class="text-head ">Наши соцсети</div>
+				<div class="media-container">
+
+					<div class="media-item">
+						<a target="_blank" href="https://www.youtube.com/@shektep"><img src="/static/media/youtube-svgrepo-com.svg"
+								alt="SVG Example"></a>
+						<div class="subscribe-button"> Подписаться </div>
+					</div>
+
+					<div class="media-item">
+						<a target="_blank" href="https://t.me/shektep"><img src="/static/media/telegram-svgrepo-com.svg"
+								alt="SVG Example"></a>
+						<div class="subscribe-button"> Подписаться </div>
+					</div>
+
+					<div class="media-block-text">
+						<p>Подписывайся, чтобы получать <br>актуальные новости и готовиться <br>вместе со всеми!</p>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</section>
+
+</main>
+<script src="../../static/js/animations.js">
+</script>
+{% endblock %}

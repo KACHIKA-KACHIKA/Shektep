@@ -2,183 +2,357 @@
 {% block content %}
 <div class="main-container-test">
 
-		<div class="main-content-test">
-				{% csrf_token %}
-				<div>Тест не смог сформироваться</div>
-		</div>
+	<div class="main-content-test">
+		{% csrf_token %}
+		<div>Тест не смог сформироваться</div>
+	</div>
+	<div class="tests-textblock"></div>
+	<div class="video-container">
+		<!-- <div id="video-details">
+		</div> -->
+		<video id="test-video" class="video-js " controls oncontextmenu="return false;" controls controlsList="nodownload">
+			<source id="video-source" type="video/mp4" />
+		</video>
+	<div id="video-timings" class="timings-container"></div>
+	</div>
 
-		<div class="btn-endtest"> <button class="btn-primary" type="submit" onclick="finishTest()">Завершить тест</button>
-		</div>
+	<div class="btn-endtest"> <button class="btn-primary" type="submit" onclick="finishTest()">Завершить тест</button>
+	</div>
 
 </div>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var tasks = {{ tasks_data | safe }};  // Задания, переданные из контекста
-        if (tasks && tasks.length > 0) {
-            renderTasks(tasks);
-        } else {
-            console.error('Нет доступных заданий.');
-        }
-    });
+	document.addEventListener('DOMContentLoaded', function () {
+		const urlParams = new URLSearchParams(window.location.search);
+		const packId = urlParams.get('pack_id');
+		if (packId) {
 
-    function renderTasks(tasks) {
-        var tasksContainer = document.querySelector('.main-content-test');
-        tasksContainer.innerHTML = '';  // Очищаем контейнер
-
-        // Цикл для создания элементов заданий
-        tasks.forEach(function(task) {
-            var taskDiv = document.createElement('div');
-            taskDiv.classList.add('task');
-            taskDiv.textContent = 'Задание ' + task.task_number;
-						taskDiv.dataset.taskNumber = task.task_number;
-
-            var taskImageDiv = document.createElement('div');
-            taskImageDiv.classList.add('task-image');
-            var taskImage = document.createElement('img');
-            taskImage.src = task.task_image_url;
-            taskImage.alt = 'Task Image';
-            taskImageDiv.appendChild(taskImage);
-
-            var taskOptionsDiv = document.createElement('div');
-            taskOptionsDiv.classList.add('task-options');
-
-            var interactableFieldsDiv = document.createElement('div');
-            interactableFieldsDiv.classList.add('interactable-fields');
-
-            var answerInputDiv = document.createElement('div');
-            answerInputDiv.classList.add('answer-input');
-            var radioLabels = ['А', 'Б', 'В', 'Г'];
-						console.log(task.subsection.name);
-						if (task.subsection.name == "Часть 2") {
-								radioLabels.push('Д');
-						}
-
-            radioLabels.forEach(function(label) {
-                var radioLabel = document.createElement('label');
-                var radioInput = document.createElement('input');
-                radioInput.type = 'radio';
-                radioInput.name = 'options_' + task.id;
-                var span = document.createElement('span');
-                span.textContent = label;
-                radioLabel.appendChild(radioInput);
-                radioLabel.appendChild(span);
-                answerInputDiv.appendChild(radioLabel);
-            });
-            interactableFieldsDiv.appendChild(answerInputDiv);
-            taskOptionsDiv.appendChild(interactableFieldsDiv);
-            taskDiv.appendChild(taskImageDiv);
-            taskDiv.appendChild(taskOptionsDiv);
-            tasksContainer.appendChild(taskDiv);
-        });
-    }
-		function finishTest() {
-				var radioButtons = document.querySelectorAll('input[type="radio"]:checked');
-				var totalTasks = document.querySelectorAll('.task').length;
-				var selectedTasks = radioButtons.length;
-				if(selectedTasks === 0)//Проверка количества отвеченных заданий
-				{
-					return;
-				}
-				if (selectedTasks < totalTasks) {
-						var confirmation = confirm('Вы ответили не на все задания. Вы уверены, что хотите завершить тест?');
-						if (!confirmation) {
-								return; // Пользователь отменил завершение теста, ничего не делаем
-						}
-				}
-
-				// Собираем данные о выбранных ответах по заданиям
-				var selectedAnswers = collectSelectedAnswers();
-				// Отправляем запрос на сервер для получения информации о правильных ответах
-				fetch('/get_correct_answers/', {
-						method: 'POST',
-						headers: {
-								'Content-Type': 'application/json',
-								'X-CSRFToken': '{{ csrf_token }}',
-						},
-						body: JSON.stringify({ selectedAnswers: selectedAnswers }),
+			fetch(`/api/task/?pack_id=${packId}`)
+				.then(response => {
+					if (!response.ok) {
+						throw new Error('Network response was not ok');
+					}
+					return response.json();
 				})
-				.then(response => response.json())
 				.then(data => {
-						createResultsTable(selectedAnswers, data.correctAnswers); // Создаем таблицу с результатами
+					const tasks = data.tasks_data;
+					if (tasks && tasks.length > 0) {
+						renderTasks(tasks);} else {
+						console.error('Нет доступных заданий.');
+					}
+				})
+				.catch(error => {
+					console.error('Ошибка при загрузке заданий:', error);
+				});
+		} else {
+			console.error('pack_id не найден в URL');
+		}
+	});
+
+	function renderVideo(packId) {
+		const examsTextBlock = document.querySelector('.tests-textblock');
+		const videoContainer = document.querySelector('.video-container');
+		videoContainer.style.display = 'flex';
+
+		fetch(`/api/video/?pack_id=${packId}`)
+			.then(response => {
+				if (!response.ok) {
+					throw new Error(response.status);
+				}
+				return response.json();
+			})
+			.then(data => {
+				const videoElement = document.getElementById('test-video');
+				const videoSource = document.getElementById('video-source');
+				videoSource.src = `/api/video-stream/?pack_id=${packId}`;
+				videoElement.load();
+			})
+			.catch(error => {
+				videoContainer.innerHTML = '';
+				if (error.message === '403') {
+					examsTextBlock.textContent = 'Видео доступно по подписке';
+				} else if (error.message === '404') {
+					examsTextBlock.textContent = 'Видео не найдено';
+				} else {
+					examsTextBlock.textContent = 'Ошибка при загрузке видео. Попробуйте позже.';
+				}
+				console.error('Ошибка при загрузке видео:', error);
+			});
+	}
+
+	function renderVideoTimings(packId) {
+		const timingsContainer = document.getElementById('video-timings');
+
+		fetch(`/api/video_timing/?pack_id=${packId}`)
+			.then(response => response.json())
+			.then(data => {
+				const timings = data.timings;
+
+				if (timings && Object.keys(timings).length > 0) {
+					timingsContainer.innerHTML = ''; // Очистка контейнера перед добавлением таймингов
+
+					for (let label in timings) {
+						const timingBtn = document.createElement('button');
+						timingBtn.textContent = `${timings[label]} - ${label}`;
+						timingBtn.classList.add('timing-btn');
+						timingBtn.classList.add('fade-in-block', 'bottom');
+
+
+						timingBtn.addEventListener('click', () => {
+							const videoElement = document.getElementById('test-video');
+							const [hours, minutes, seconds] = timings[label].split(':').map(Number);
+							const newTime = hours * 3600 + minutes * 60 + seconds;
+							videoElement.currentTime = newTime;
+							videoElement.play(); // Запуск видео после перемотки
+						});
+
+						timingsContainer.appendChild(timingBtn);
+
+					}
+				} else {
+					timingsContainer.innerHTML = '<p>Тайминги отсутствуют.</p>';
+				}
+				PlayAnimation();
+			})
+			.catch(error => {
+				console.error('Ошибка при загрузке таймингов:', error);
+				timingsContainer.innerHTML = '<p>Ошибка при загрузке таймингов.</p>';
+			});
+	}
+
+	function finishTest() {
+		var radioButtons = document.querySelectorAll('input[type="radio"]:checked');
+		var totalTasks = document.querySelectorAll('.task').length;
+		var selectedTasks = radioButtons.length;
+
+		if (selectedTasks === 0) {  // Проверка количества отвеченных заданий
+			return;
+		}
+
+		if (selectedTasks < totalTasks) {
+			var confirmation = confirm('Вы ответили не на все задания. Вы уверены, что хотите завершить тест?');
+			if (!confirmation) {
+				return;  // Пользователь отменил завершение теста, ничего не делаем
+			}
+		}
+		var selectedAnswers = collectSelectedAnswers();
+		const urlParams = new URLSearchParams(window.location.search);
+		const packId = urlParams.get('pack_id');
+
+		renderVideo(packId);
+		renderVideoTimings(packId);
+		if (packId) {
+			fetch(`/api/task_answer/?pack_id=${packId}`)
+				.then(response => {
+					if (!response.ok) {
+						throw new Error('Network response was not ok');
+					}
+					return response.json();
+				})
+				.then(data => {
+					const tasks = data.tasks_data;
+					if (tasks && tasks.length > 0) {
+						createResultsTable(selectedAnswers, tasks);
 						var finishButton = document.querySelector('.btn-endtest .btn-primary');
 						finishButton.textContent = 'Вернуться';
 						finishButton.onclick = function () {
-								window.location.href = "{% url 'home' %}";
+							window.location.href = "{% url 'home' %}";
 						};
-						finishButton.setAttribute('type', 'button'); // Изменяем тип кнопки, чтобы она не отправляла форму
+						finishButton.setAttribute('type', 'button');
+					} else {
+						console.error('Нет доступных заданий.');
+					}
 				})
 				.catch(error => {
-						console.error('Error fetching correct answers:', error);
+					console.error('Ошибка при загрузке заданий:', error);
 				});
+		} else {
+			console.error('pack_id не найден в URL');
+		}
+	}
 
-				var SolutionButtons = document.querySelectorAll('.btn-solution');
-				if (SolutionButtons) {
-						SolutionButtons.forEach(function(button) { button.style.display = 'flex'; }); // Открываем кнопки решения
-				} 
-				else {
-						console.error('Элемент с классом "btn-solution" не найден.');
+	function collectSelectedAnswers() {
+		var selectedAnswers = [];
+		var tasks = document.querySelectorAll('.task');
+		var radioButtons = document.querySelectorAll('input[type="radio"]:checked');
+		radioButtons.forEach(function (radioButton) {
+			var task_id = radioButton.name.split('_')[1];
+			var selectedAnswer = radioButton.nextElementSibling.textContent;
+			var taskDiv = radioButton.closest('.task');
+			var taskNumber = taskDiv.dataset.taskNumber;
+			selectedAnswers.push({ task_id: task_id, selectedAnswer: selectedAnswer, taskNumber: taskNumber });
+		});
+		return selectedAnswers;
+	}
+
+	function createResultsTable(selectedAnswers, tasks) {
+		var tableContainer = document.createElement('div');
+		tableContainer.classList.add('table-container');
+
+		var resultsTable = document.createElement('table');
+		resultsTable.classList.add('table-custom');
+		var headerRow = resultsTable.insertRow();
+		headerRow.insertCell(0).textContent = 'Номер задания';
+		headerRow.insertCell(1).textContent = 'Выбранный ответ';
+		headerRow.insertCell(2).textContent = 'Правильный ответ';
+
+		var correctTasks = [];
+		var incorrectTasks = [];
+
+		selectedAnswers.forEach(function (selectedAnswer) {
+			var task = tasks.find(task => task.id === parseInt(selectedAnswer.task_id));  // Находим правильный ответ по ID задания
+			var correctAnswerText = task ? task.answer : '';
+
+			var row = resultsTable.insertRow();
+			row.insertCell(0).textContent = selectedAnswer.taskNumber;
+
+			var selectedCell = row.insertCell(1);
+			selectedCell.textContent = selectedAnswer.selectedAnswer;
+			if (selectedAnswer.selectedAnswer === correctAnswerText) {
+				selectedCell.style.backgroundColor = '#8FF57A';  // Зеленый для правильных ответов
+				correctTasks.push(selectedAnswer.task_id);
+			} else {
+				selectedCell.style.backgroundColor = '#F57A7A';  // Красный для неправильных ответов
+				incorrectTasks.push(selectedAnswer.task_id);
+			}
+
+			var correctCell = row.insertCell(2);
+			correctCell.textContent = correctAnswerText;
+		});
+
+		tableContainer.appendChild(resultsTable);
+
+		var resultsContainer = document.querySelector('.main-content-test');
+		resultsContainer.appendChild(tableContainer);
+
+		var radioButtons = document.querySelectorAll('input[type="radio"]');
+		radioButtons.forEach(function (radioButton) {
+			radioButton.disabled = true;
+		});
+
+		const urlParams = new URLSearchParams(window.location.search);
+		const packId = urlParams.get('pack_id');
+
+		fetch(`/api/task/?pack_id=${packId}`)
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('Network response was not ok');
 				}
-		}
+				return response.json();
+			})
+			.then(data => {
+				const allTasks = data.tasks_data; // Все задания, которые были в тесте
+				const selectedTaskIds = selectedAnswers.map(answer => parseInt(answer.task_id)); // ID выбранных пользователем заданий
 
-		function collectSelectedAnswers() {
-				var selectedAnswers = [];
-				var radioButtons = document.querySelectorAll('input[type="radio"]:checked');
-				radioButtons.forEach(function(radioButton) {
-						var task_id = radioButton.name.split('_')[1];
-						var selectedAnswer = radioButton.nextElementSibling.textContent;
-						var taskDiv = radioButton.closest('.task');
-						var taskNumber = taskDiv.dataset.taskNumber; 
-						selectedAnswers.push({ task_id: task_id, selectedAnswer: selectedAnswer, taskNumber: taskNumber  });
+				// Определяем задания, которые пользователь не отметил
+				allTasks.forEach(task => {
+					if (!selectedTaskIds.includes(task.id)) {
+						incorrectTasks.push(task.id);  // Добавляем неотмеченные задания как неправильно решенные
+					}
 				});
-				return selectedAnswers;
-		}
 
-		function createResultsTable(selectedAnswers, correctAnswers) {
-				var tableContainer = document.createElement('div');
-				tableContainer.classList.add('table-container');
+				// Рассчитываем процент правильно решенных задач
+				const totalTasks = allTasks.length;
+				const correctTasksCount = correctTasks.length;
+				const solvedPercent = Math.round((correctTasksCount / totalTasks) * 100);  // Процент решенных задач, округленный до целого
 
-				var resultsTable = document.createElement('table');
-				resultsTable.classList.add('table-custom');
-				var headerRow = resultsTable.insertRow();
-				headerRow.insertCell(0).textContent = 'Номер задания';
-				headerRow.insertCell(1).textContent = 'Выбранный ответ';
-				headerRow.insertCell(2).textContent = 'Правильный ответ';
-
-				selectedAnswers.forEach(function(selectedAnswer) {
-						var task_id = selectedAnswer.task_id;
-						var selectedAnswerText = selectedAnswer.selectedAnswer;
-						var correctAnswerText = correctAnswers[task_id];
-
-						var row = resultsTable.insertRow();
-						row.insertCell(0).textContent = selectedAnswer.taskNumber;
-
-						var selectedCell = row.insertCell(1);
-						selectedCell.textContent = selectedAnswerText;
-						if (selectedAnswerText === correctAnswerText) {
-								selectedCell.style.backgroundColor = '#8FF57A'; // Зеленый для правильных ответов
-						} else {
-								selectedCell.style.backgroundColor = '#F57A7A'; // Красный для неправильных ответов
+				// Отправляем запрос на сохранение процента решенных задач
+				fetch('/api/solve_pack/', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-CSRFToken': '{{ csrf_token }}',
+					},
+					body: JSON.stringify({
+						pack_id: packId,
+						solved_percent: solvedPercent
+					}),
+				})
+					.then(response => {
+						if (!response.ok) {
+							throw new Error(`Ошибка при сохранении результатов: ${response.status}`);
 						}
+						return response.json();
+					})
+					.then(data => console.log('Результаты сохранены:', data))
+					.catch(error => console.error('Ошибка при сохранении результатов:', error));
+			});
+	}
 
-						var correctCell = row.insertCell(2);
-						correctCell.textContent = correctAnswerText;
-				});
+	function renderTasks(tasks) {
+		var tasksContainer = document.querySelector('.main-content-test');
+		tasksContainer.innerHTML = '';  // Очищаем контейнер
+		var index = 1;
+		// Цикл для создания элементов заданий
+		tasks.forEach(function (task) {
+			var taskDiv = document.createElement('div');
+			taskDiv.classList.add('task');
+			taskDiv.classList.add('fade-in-block', 'bottom');
+			taskDiv.textContent = 'Задание ' + index;
+			taskDiv.dataset.taskNumber = index++;
 
-				tableContainer.appendChild(resultsTable);
+			var taskImageDiv = document.createElement('div');
+			taskImageDiv.classList.add('task-image');
+			var taskImage = document.createElement('img');
+			taskImage.src = task.task_image_url;
+			taskImage.alt = 'Task Image';
+			taskImageDiv.appendChild(taskImage);
 
-				var resultsContainer = document.querySelector('.main-content-test');
-				resultsContainer.appendChild(tableContainer);
+			var taskOptionsDiv = document.createElement('div');
+			taskOptionsDiv.classList.add('task-options');
 
-				// Деактивация радиокнопок
-				var radioButtons = document.querySelectorAll('input[type="radio"]');
-				radioButtons.forEach(function(radioButton) {
-						radioButton.disabled = true;
-				});
-}
+			var interactableFieldsDiv = document.createElement('div');
+			interactableFieldsDiv.classList.add('interactable-fields');
 
-		function toggleSolution(button) {
-				var solutionImage = button.parentElement.parentElement.querySelector('.solution-image');
-				solutionImage.classList.toggle('show');
+			var answerInputDiv = document.createElement('div');
+			answerInputDiv.classList.add('answer-input');
+			var radioLabels = ['А', 'Б', 'В', 'Г'];
+			if (task.subsection == "Часть 2") {
+				radioLabels.push('Д');
+			}
+
+			radioLabels.forEach(function (label) {
+				var radioLabel = document.createElement('label');
+				var radioInput = document.createElement('input');
+				radioInput.type = 'radio';
+				radioInput.name = 'options_' + task.id;
+				var span = document.createElement('span');
+				span.textContent = label;
+				radioLabel.appendChild(radioInput);
+				radioLabel.appendChild(span);
+				answerInputDiv.appendChild(radioLabel);
+			});
+			interactableFieldsDiv.appendChild(answerInputDiv);
+			taskOptionsDiv.appendChild(interactableFieldsDiv);
+			taskDiv.appendChild(taskImageDiv);
+			taskDiv.appendChild(taskOptionsDiv);
+			tasksContainer.appendChild(taskDiv);
+
+			PlayAnimation()
+		});
+
+	}
+
+	function PlayAnimation() {
+		const fadeInBlocks = document.querySelectorAll('.fade-in-block');
+
+		function handleScroll() {
+			fadeInBlocks.forEach(block => {
+				const blockPosition = block.getBoundingClientRect().top;
+				const windowHeight = window.innerHeight;
+
+				// Проверяем, виден ли блок на экране
+				if (blockPosition < windowHeight + 100) {
+					block.classList.add('visible');
+				}
+			});
 		}
+
+		// Выполняем проверку при прокрутке
+		window.addEventListener('scroll', handleScroll);
+
+		// Выполняем проверку при загрузке страницы
+		handleScroll();
+	}
+
 </script>
 {% endblock %}

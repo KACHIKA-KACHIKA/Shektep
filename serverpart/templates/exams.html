@@ -1,0 +1,127 @@
+{% extends "./base.html" %}
+{% block content %}
+<div class="main-content">
+	{% include "subscribe_banner.html" %}
+
+	{% csrf_token %}
+	<div class="exams-container fade-in">
+		<div class="tests-textblock"></div>
+	</div>
+
+	{% include "youtube_videos.html" %}
+</div>
+<script>
+	document.addEventListener('DOMContentLoaded', function () {
+
+		const fadeInElements = document.querySelectorAll('.fade-in');
+
+		fadeInElements.forEach((element, index) => {
+			setTimeout(() => {
+				element.classList.add('visible');
+			}, index * 200);
+		});
+
+		fetch('/api/solved_exam/')
+			.then(response => {
+				if (!response.ok) {
+					throw new Error(response.status);
+				}
+				return response.json();
+			})
+			.then(solvedData => {
+				const solvedExamIds = Array.isArray(solvedData.solved_exams) ? solvedData.solved_exams : [];
+				return fetch('/api/exams/').then(response => {
+					if (!response.ok) {
+						throw new Error(response.status);
+					}
+					return response.json();
+				}).then(data => {
+					if (data.exams && data.exams.length > 0) {
+						var sortedExams = sortExams(data.exams, solvedExamIds);
+						renderExams(sortedExams, solvedExamIds);
+					} else {
+						var examsTextBlock = document.querySelector('.tests-textblock');
+						examsTextBlock.textContent = 'Экзамены доступны по подписке';
+					}
+				});
+			})
+			.catch(error => {
+				var examsTextBlock = document.querySelector('.tests-textblock');
+
+				console.log("error.message", error.message);
+				if (error.message === '403') {
+					examsTextBlock.textContent = 'Экзамены доступны по подписке';
+				} else {
+					examsTextBlock.textContent = 'Экзамены скоро появятся';
+				}
+			});
+	});
+
+
+	function sortExams(exams, solvedExamIds) {
+		exams.sort((a, b) => a.difficulty_id - b.difficulty_id);
+
+		let groupedExams = {};
+		exams.forEach(exam => {
+			let examDate = new Date(exam.created_at);
+			let monthYearKey = `${examDate.getFullYear()}-${examDate.getMonth() + 1}`;
+
+			if (!groupedExams[monthYearKey]) {
+				groupedExams[monthYearKey] = [];
+			}
+			groupedExams[monthYearKey].push(exam);
+		});
+
+		return groupedExams;
+	}
+
+	function renderExams(groupedExams, solvedExamIds) {
+		var examsContainer = document.querySelector('.exams-container');
+		examsContainer.innerHTML = '';
+		var monthNames = [
+			"январь", "февраль", "март", "апрель", "май", "июнь",
+			"июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"
+		];
+
+		for (var monthYear in groupedExams) {
+			var [year, month] = monthYear.split('-');
+			var monthName = monthNames[parseInt(month, 10) - 1];
+
+
+			var monthYearHeader = document.createElement('h2');
+			monthYearHeader.classList.add('month-year-header');
+			monthYearHeader.textContent = `Экзамены за ${monthName}`;
+			examsContainer.appendChild(monthYearHeader);
+
+			var examsBtnContainer = document.createElement('div');
+			examsBtnContainer.classList.add('exams-buttons-container');
+			examsContainer.appendChild(examsBtnContainer);
+
+			groupedExams[monthYear].forEach(function (exam, index) {
+				var examButton = document.createElement('button');
+				examButton.classList.add('btn-exam');
+				examButton.textContent = exam.name;
+				examButton.dataset.examId = exam.id;
+
+				if (solvedExamIds.includes(exam.id) || index === 0) {
+					examButton.onclick = function () {
+						uploadExam(this);
+					};
+				} else if (index > 0 && solvedExamIds.includes(groupedExams[monthYear][index - 1].id)) {
+					examButton.onclick = function () {
+						uploadExam(this);
+					};
+				}
+				else {
+					examButton.disabled = true;
+					examButton.title = "Вы не можете решить этот экзамен, пока не пройдете предыдущий.";
+				}
+				examsBtnContainer.appendChild(examButton);
+			});
+		}
+	}
+	function uploadExam(examButton) {
+		window.location.href = `examing/?exam_id=${examButton.dataset.examId}`;
+	}
+</script>
+{% endblock %}

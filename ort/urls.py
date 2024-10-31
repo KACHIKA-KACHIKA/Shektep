@@ -1,31 +1,41 @@
-"""
-URL configuration for ort project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import path, include
-import debug_toolbar
 from django.conf import settings
 from django.conf.urls.static import static
+
+from exam.views import *
+from user.views import *
+from serverpart.views import *
+from videoplayer.views import *
 urlpatterns = [
-		path('', include('serverpart.urls')),
-    path('admin/', admin.site.urls),
-		#path('ort/', include('serverpart.urls')),
-		path('__debug__/', include(debug_toolbar.urls)),
+	path('api/subsection/', SubsectionAPI.as_view(), name="subsection"),
+	path('api/pack/', PackAPI.as_view(), name="pack"),
+	path('api/task/', TaskAPI.as_view(), name="task"),
+
+	path('api/task_answer/', TaskAnswerAPI.as_view(), name="task_answer"),
+
+	path('api/exams/', ExamsAPI.as_view(), name='exams'),
+
+	path('api/exam/', ExamAPI.as_view(), name='exam'),
+	path('api/difficulty/', DifficultyAPI.as_view(), name='difficulty'),
+	# path('api/reading_block/', ReadingBlockAPI.as_view(), name='reading_block'),
+
+	path('api/solve_exam/', CorrectExamAPI.as_view(), name='solve_exam'), # Записать результат решенного экзамена
+	path('api/solved_exam/', SolvedExamAPI.as_view(), name='solved_exam'), # Узнать какие экзамены решены, для открытия доступа к другим
+
+	path('api/solve_pack/', SolvePackAPI.as_view(), name='solve_task'), # Записать результат теста
+
+	path('api/video/', VideoDetailAPIView.as_view(), name='video-detail'),
+	path('api/video-stream/', VideoStreamingAPIView.as_view(), name='video-stream'),
+	path('api/video_timing/', VideoTimingAPIView.as_view(), name='video-timings'),
+
+	path('', home, name='home'),
+	path('tests/', include('serverpart.urls')),
+	path('user/', include('user.urls')),
+	path('vp/', include('videoplayer.urls')),
+	path('exams/', include('exam.urls')),
+	path('admin/', admin.site.urls),
 ]
 
-# Добавляет дополнительные маршруты URL для обслуживания этих файлов через встроенный сервер разработки.
 if settings.DEBUG:
-		urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+	urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

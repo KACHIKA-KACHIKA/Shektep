@@ -1,5 +1,7 @@
 .vscode
 
+.pyc
+
 .venv
 .env
 .ENV

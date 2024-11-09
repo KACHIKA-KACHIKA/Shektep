@@ -10,7 +10,7 @@ class HasAccessToVideo(BasePermission):
     def has_permission(self, request, view):
         user = request.user
         if user.is_authenticated:
-            required_access = AccessRight.objects.get(name="Доступ к видео")
+            required_access = AccessRight.objects.filter(name="Доступ к видео").first()
             active_subscriptions = SubscriptionList.objects.filter(
                 user=user,
                 timestamp__lte=timezone.now(),
@@ -28,7 +28,7 @@ class HasAccessToTestResults(BasePermission):
     def has_permission(self, request, view):
         user = request.user
         if user.is_authenticated:
-            required_access = AccessRight.objects.get(name="Доступ к результатам")
+            required_access = AccessRight.objects.filter(name="Доступ к результатам").first()
             active_subscriptions = SubscriptionList.objects.filter(
                 user=user,
                 timestamp__lte=timezone.now(),
@@ -46,7 +46,7 @@ class HasAccessToExams(BasePermission):
     def has_permission(self, request, view):
         user = request.user
         if user.is_authenticated:
-            required_access = AccessRight.objects.get(name="Доступ к экзаменам")
+            required_access = AccessRight.objects.filter(name="Доступ к экзаменам").first()
             active_subscriptions = SubscriptionList.objects.filter(
                 user=user,
                 timestamp__lte=timezone.now(),

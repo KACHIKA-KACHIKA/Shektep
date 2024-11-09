@@ -69,7 +69,7 @@
 			.catch(error => {
 				videoContainer.innerHTML = '';
 				if (error.message === '403') {
-					examsTextBlock.textContent = 'Видео доступно по подписке';
+					examsTextBlock.textContent = 'Видео-разбор доступен по подписке';
 				} else if (error.message === '404') {
 					examsTextBlock.textContent = 'Видео не найдено';
 				} else {

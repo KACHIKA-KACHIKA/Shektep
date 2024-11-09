@@ -1,71 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<meta name="description" content="Готовимся к ОРТ вместе!	Проект направлен на повышение уровня образования в Кыргызстане! Дорогие школьники и не только, теперь у вас есть возможность подготовиться к разделу математики ОРТ - БЕСПЛАТНО.">
-		<!-- <meta http-equiv="refresh" content="0; URL=https://www.shektep.ru/"> -->
-		<link rel="icon" href="/static/media/favicon.ico" type="image/x-icon">
-		<link rel="stylesheet" type="text/css" href="/static/css/navbar-styles.css">
-		<link rel="stylesheet" type="text/css" href="/static/css/authentication.css">
-		<link rel="stylesheet" type="text/css" href="/static/css/mainstyles.css">
-		<link rel="stylesheet" type="text/css" href="/static/css/teststyles.css">
-		<link rel="stylesheet" type="text/css" href="/static/css/tablestyles.css">
-		<link rel="stylesheet" type="text/css" href="/static/css/testspagestyles.css">
-		<link rel="preconnect" href="https://fonts.googleapis.com">
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-		<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500&family=M+PLUS+Rounded+1c&display=swap" rel="stylesheet">
-		<link rel="icon" href="/static/media/logo2x2.png" type="image/png">
 
-		<title>Шектеп - Подготовка к ОРТ</title>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description"
+		content="Готовимся к ОРТ вместе!	Проект направлен на повышение уровня образования в Кыргызстане! Дорогие школьники и не только, теперь у вас есть возможность подготовиться к разделу математики ОРТ - БЕСПЛАТНО.">
+	<link rel="icon" href="/static/media/favicon.ico" type="image/x-icon">
+	<link rel="stylesheet" type="text/css" href="/static/css/mainstyles.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/animations.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/home_page.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/header.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/authentication.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/test_creation.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/youtube_videos.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/test.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/result_table.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/exams.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/video_style.css">
+	<link rel="icon" href="/static/media/logo2x2.png" type="image/png">
+
+	<title>Шектеп - Подготовка к ОРТ</title>
 </head>
+
 <body>
 	<header class="header">
 		<div class="navbar">
 
-				<a class="logo" href="{% url 'home' %}">
-					<img src="/static/media/LogoNorm.png" height="40" width="32" alt="Logo">
-					<span>ШЕКТЕП</span>
-				</a>
+			<a class="logo" href="{% url 'home' %}">
+				<img src="/static/media/LogoNorm.png" height="40" width="32" alt="Logo">
+				<span>ШЕКТЕП</span>
+			</a>
 
-				<div class="tabs">
-					<a class="tab" href="{% url 'tests' %}"> Варианты
-					</a>
-				</div>
-
-				{% if user.is_authenticated %}
-				<div class="auth-section">
-						<a class="user-name">{{ request.user.username }}</a>
+			<nav class="tabs" id="main-menu">
+				<div class="tabs-container">
+					<a class="tab" href="{% url 'tests' %}"> задания</a>
+					<a class="tab" href="{% url 'exams' %}"> экзамены</a>
+					<a class="tab" onclick="scrollToSubscription()"> подписка</a>
+					<a class="tab" onclick="scrollToMedia()"> о нас</a>
+					<div class="auth-mobile">
+						{% if user.is_authenticated %}
 						<form method="POST" action="{% url 'logout' %}">
-								{% csrf_token %}
-								<button type="submit" class="btn-primary">Выйти</button>
-						</form>
-				</div>
-				{% else %}
-				<div class="auth-section">
-					<a href="{% url 'login' %}" class="btn-primary btn-login">Войти</a>
-				</div>
-				{% endif %}
+							{% csrf_token %}
+							<button type="submit" class="btn-logout-mobile">выйти
+								<svg width="30" height="32" viewBox="0 0 30 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<path
+										d="M22 7V3.4918C22 2.38723 21.1046 1.4918 20 1.4918H3.04255M22 17V24.082C22 25.1865 21.1046 26.082 20 26.082H17.4043M1.89362 2.96721C1.89362 12.3828 1.89362 21.979 1.89362 25.5804C1.89362 26.4651 2.4749 27.2387 3.32283 27.4912L13.821 30.6172C14.4622 30.8082 15.1064 30.3278 15.1064 29.6588V5.68005C15.1064 5.23768 14.8157 4.84788 14.3918 4.72163L3.77902 1.56142C2.83853 1.28137 1.89362 1.98592 1.89362 2.96721V2.96721Z"
+										stroke="#006CDC" stroke-width="2" stroke-linecap="round" />
+									<path d="M18 12H29M29 12C29 11 24.6 9 24.6 9M29 12C29 13 24.6 15 24.6 15" stroke="#006CDC"
+										stroke-width="2" stroke-linecap="round" />
+								</svg>
 
+							</button>
+						</form>
+						{% else %}
+						<a href="{% url 'login' %}" class="btn-login-mobile">войти
+							<svg width="31" height="32" viewBox="0 0 31 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path
+									d="M9.89355 7V3.4918C9.89355 2.38723 10.789 1.4918 11.8936 1.4918H28.851M9.89355 17V24.082C9.89355 25.1865 10.789 26.082 11.8936 26.082H14.4893M29.9999 2.96721C29.9999 12.3828 29.9999 21.979 29.9999 25.5804C29.9999 26.4651 29.4187 27.2387 28.5707 27.4912L18.0726 30.6172C17.4314 30.8082 16.7872 30.3278 16.7872 29.6588V5.68005C16.7872 5.23768 17.0778 4.84788 17.5018 4.72163L28.1145 1.56142C29.055 1.28137 29.9999 1.98592 29.9999 2.96721V2.96721Z"
+									stroke="#006CDC" stroke-width="2" stroke-linecap="round" />
+								<path d="M1 12H12M12 12C12 11 7.6 9 7.6 9M12 12C12 13 7.6 15 7.6 15" stroke="#006CDC" stroke-width="2"
+									stroke-linecap="round" />
+							</svg>
+
+						</a>
+						{% endif %}
+					</div>
+			</nav>
+
+			{% if user.is_authenticated %}
+			<div class="auth-section">
+				<div class="user-info">
+					<a class="user-name">
+						{{ request.user.username|slice:":15" }}{% if request.user.username|length > 15 %}...{% endif %}
+					</a>
+					{% if end_date %}
+					<p class="subscription-info" style="color: #006CDB">
+						активна подписка до {{ end_date|date:"d.m.Y" }}
+					</p>
+					{% else %}
+					<p class="subscription-info" style="color: #656565">нет подписки</p>
+					{% endif %}
+				</div>
+
+				<form method="POST" action="{% url 'logout' %}">
+					{% csrf_token %}
+					<button type="submit" class="btn-logout">
+						<svg width="30" height="30" viewBox="0 0 30 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<path
+								d="M22 7V3.4918C22 2.38723 21.1046 1.4918 20 1.4918H3.04255M22 17V24.082C22 25.1865 21.1046 26.082 20 26.082H17.4043M1.89362 2.96721C1.89362 12.3828 1.89362 21.979 1.89362 25.5804C1.89362 26.4651 2.4749 27.2387 3.32283 27.4912L13.821 30.6172C14.4622 30.8082 15.1064 30.3278 15.1064 29.6588V5.68005C15.1064 5.23768 14.8157 4.84788 14.3918 4.72163L3.77902 1.56142C2.83853 1.28137 1.89362 1.98592 1.89362 2.96721V2.96721Z"
+								stroke="#006CDC" stroke-width="2" stroke-linecap="round" />
+							<path d="M18 12H29M29 12C29 11 24.6 9 24.6 9M29 12C29 13 24.6 15 24.6 15" stroke="#006CDC"
+								stroke-width="2" stroke-linecap="round" />
+						</svg>
+
+					</button>
+				</form>
+			</div>
+			{% else %}
+			<div class="auth-section">
+				<a href="{% url 'login' %}" class="btn-login">войти
+					<svg width="22" height="22" viewBox="0 0 31 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path
+							d="M9.89355 7V3.4918C9.89355 2.38723 10.789 1.4918 11.8936 1.4918H28.851M9.89355 17V24.082C9.89355 25.1865 10.789 26.082 11.8936 26.082H14.4893M29.9999 2.96721C29.9999 12.3828 29.9999 21.979 29.9999 25.5804C29.9999 26.4651 29.4187 27.2387 28.5707 27.4912L18.0726 30.6172C17.4314 30.8082 16.7872 30.3278 16.7872 29.6588V5.68005C16.7872 5.23768 17.0778 4.84788 17.5018 4.72163L28.1145 1.56142C29.055 1.28137 29.9999 1.98592 29.9999 2.96721V2.96721Z"
+							stroke="#006CDC" stroke-width="2" stroke-linecap="round" />
+						<path d="M1 12H12M12 12C12 11 7.6 9 7.6 9M12 12C12 13 7.6 15 7.6 15" stroke="#006CDC" stroke-width="2"
+							stroke-linecap="round" />
+					</svg>
+				</a>
+			</div>
+			{% endif %}
+			<input class="checkbox" type="checkbox" id="menu-toggle" />
+			<div class="hamburger-lines">
+				<span class="line line1"></span>
+				<span class="line line2"></span>
+				<span class="line line3"></span>
+			</div>
 		</div>
 	</header>
 </body>
+<script>
+	document.addEventListener('DOMContentLoaded', function () {
+		const menu = document.querySelector('.tabs');
+		const toggleButton = document.querySelector('.checkbox');
+
+		toggleButton.addEventListener('click', () => {
+			if (menu.classList.contains('open')) {
+				document.body.classList.toggle('menu-open');
+				menu.style.opacity = '0';
+				menu.style.transform = 'translateX(100%)';
+
+				setTimeout(() => {
+					menu.classList.remove('open');
+					menu.style.visibility = 'hidden';
+				}, 500);
+			} else {
+				document.body.classList.toggle('menu-open');
+				menu.classList.add('open');
+				menu.style.visibility = 'visible';
+				setTimeout(() => {
+					menu.style.opacity = '1';
+					menu.style.transform = 'translateX(0%)';
+				}, 10);
+			}
+		});
+	});
+	window.onload = function () {
+		const params = new URLSearchParams(window.location.search);
+
+		if (params.has('scrollTo')) {
+			const targetHeight = parseInt(params.get('scrollTo'), 10);
+
+			window.scrollTo({
+				top: targetHeight,
+				behavior: 'smooth'
+			});
+		}
+	};
+	function scrollToSubscription() {
+		const scrollPosition = window.innerWidth < 800 ? 1439 : 850;
+		window.location.href = `/?scrollTo=${scrollPosition}`;
+	}
+	function scrollToMedia() {
+		window.location.href = '/?scrollTo=2500';
+	}
+
+</script>
 {% block content %}
 
 {% endblock %}
 <footer class="footer">
-	<div class="social-links-container">
-			<div class="social-links">
+	<div class="tabs" style="justify-content: center">
+		<!-- <a class="tab" style="color: #656565" href="{% url 'tests' %}"> задания
+			<a class="tab" style="color: #656565" href="{% url 'exams' %}"> экзамены
+			</a>
+			<a class="tab" style="color: #656565"> подписка
+			</a>
+			<a class="tab" style="color: #656565"> о нас
+			</a> -->
 
-				<a target="_blank" href="https://t.me/shektep" class="btn-link">
-					<img src="/static/media/telegram-svgrepo-com.svg" alt="SVG Example">Telegram</a>
-
-				<a target="_blank" href="https://www.youtube.com/@shektep" class="btn-link">
-					<img src="/static/media/youtube-svgrepo-com.svg" alt="SVG Example">YouTube</a>
-
-			</div> 
+			<a class="tab" style="color: #656565" href="{% url 'tests' %}"> задания</a>
+			<a class="tab" style="color: #656565" href="{% url 'exams' %}"> экзамены</a>
+			<a class="tab" style="color: #656565" onclick="scrollToSubscription()"> подписка</a>
+			<a class="tab" style="color: #656565" onclick="scrollToMedia()"> о нас</a>
+	</div>
 	</div>
 </footer>
 
 </body>
+
 </html>

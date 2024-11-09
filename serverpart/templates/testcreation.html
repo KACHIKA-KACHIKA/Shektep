@@ -1,192 +1,185 @@
 {% extends "./base.html" %}
 {% block content %}
-<div class="main-content">
-		{% include "motivatecontent.html" %}
-		
-		<div class="section-container">
-				<div class="section-head">Направления подготовки на платформе </div>
-				<div class="buttons-container">
-						{% for section in sections %}
-								<button class="btn-section" onclick="selectButtonSection(this)" data-section-id="{{ section.id }}">{{ section.name }}</button>
-						{% endfor %}
-								<button class="btn-section" onclick="redirectToTests(this)">Решай готовые варианты</button>
-				</div>
+
+<div class="main-content fade-in">
+
+	{% include "subscribe_banner.html" %}
+
+	<section class="section-container fade-in">
+		<div class="section-head">Направления подготовки на платформе </div>
+		<div class="buttons-container">
+			{% for section in sections %}
+			<button class="btn-section fade-in-block bottom" onclick="selectButtonSection(this)"
+				data-section-id="{{ section.id }}">
+				{{section.name}}</button>
+			{% endfor %}
+			<button class="btn-section" onclick="redirectToExams(this)">Решай готовые варианты</button>
 		</div>
+	</section>
 
-		<div class="subsection-container">
-			
-				<!-- Загрузка разделов из бд -->
-				<div class="vertical-buttons"> </div> 
+	<section class="subsection-container fade-in">
+		<div class="vertical-buttons fade-in"> </div>
+		<div class="topics-list fade-in"> </div>
+		<div class="tests-textblock fade-in"></div>
+	</section>
 
-				<!-- Загрузка тем разделов из бд -->
-				<div class="topics-list"> </div>
-				<div class="tests-textblock"></div>
+	{% include "youtube_videos.html" %}
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			const fadeInElements = document.querySelectorAll('.fade-in');
 
-		</div>
-</div>
-<script>
+			fadeInElements.forEach((element, index) => {
+				setTimeout(() => {
+					element.classList.add('visible');
+				}, index * 200);
+			});
+
+			const fadeInBlocks = document.querySelectorAll('.fade-in-block');
+
+			function handleScroll() {
+				fadeInBlocks.forEach(block => {
+					const blockPosition = block.getBoundingClientRect().top;
+					const windowHeight = window.innerHeight;
+					if (blockPosition < windowHeight - 100) {
+						block.classList.add('visible');
+					}
+				});
+			}
+			window.addEventListener('scroll', handleScroll);
+			handleScroll();
+		});
 		function loadSubsections(sectionId) {
-				var subsectionsList = document.querySelector('.vertical-buttons');
-				subsectionsList.innerHTML = '';
-				
-				fetch(`/get_subsections/${sectionId}/` ,{
-						method: 'POST',
-						headers: {
-								'Content-Type': 'application/json',
-								'X-CSRFToken': '{{ csrf_token }}',
-						},
-				})// Получаем разделы для выбранного предмета
+			var subsectionsList = document.querySelector('.vertical-buttons');
+			subsectionsList.innerHTML = '';
+			fetch(`/api/subsection/?section_id=${sectionId}`)
 				.then(response => response.json())
 				.then(data => {
+					data.forEach(subsection => {
+						var btn = document.createElement('button');
+						btn.classList.add('btn-subsection');
+						btn.textContent = subsection.name;
+						btn.dataset.subsectionId = subsection.id;
+						btn.onclick = function () {
+							selectButtonSubsection(this);
+						};
+						subsectionsList.appendChild(btn);
+					});
+					var testsTextBlock = document.querySelector('.tests-textblock');
+					testsTextBlock.innerHTML = '';
 
-						data.forEach(subsection => { // Добавляем разделы на страницу
-								var btn = document.createElement('button');
-								btn.classList.add('btn-subsection');
-								btn.textContent = subsection.name;
-								btn.dataset.subsectionId = subsection.id;
-								btn.onclick = function() {
-										selectButtonSubsection(this);
-								};
-								subsectionsList.appendChild(btn);
-						});
+					if (subsectionsList.childNodes.length > 0) {
+						subsectionsList.childNodes[0].classList.add('selected');
+						var subsection_id = subsectionsList.childNodes[0].dataset.subsectionId;
+						if (subsectionsList.childNodes.length == 1) {
+							subsection_name = subsectionsList.childNodes[0].textContent;
+							subsectionsList.className = 'tests-textblock';
+							subsectionsList.textContent = subsection_name;
+							subsectionsList.style.marginTop = '12px';
 
-						// console.log("subs" + subsectionsList.childNodes.length);
-						
-						var testsTextBlock = document.querySelector('.tests-textblock');
-						testsTextBlock.innerHTML = '';
-						
-						if(subsectionsList.childNodes.length > 0){
-								subsectionsList.childNodes[0].classList.add('selected');
-								var subsection_id = subsectionsList.childNodes[0].dataset.subsectionId;
-								if(subsectionsList.childNodes.length == 1){
-										subsection_name = subsectionsList.childNodes[0].textContent;
-										subsectionsList.className = 'tests-textblock';
-										subsectionsList.textContent = subsection_name;
-										subsectionsList.style.marginTop = '12px';
-										
-								}
-								loadPacks(subsection_id); // Для первого раздела загружаем тесты
 						}
-						else{
-									testsTextBlock.textContent = 'Тесты скоро появятся';
-						}
+						loadPacks(subsection_id);
+					}
+					else {
+						testsTextBlock.textContent = 'Тесты скоро появятся';
+					}
 				})
 				.catch(error => {
-						console.error('Ошибка загрузки подразделов:', error);
+					console.error('Ошибка загрузки подразделов:', error);
 				});
 		}
 
 		function selectButtonSubsection(button) {
-				var buttons_section = document.querySelectorAll('.btn-subsection');
-				buttons_section.forEach(function (btn) {
-						btn.classList.remove('selected');
-				});
-				button.classList.add('selected'); // Меняем выделение у выбранной кнопки
-				var selectedSubsectionId = button.dataset.subsectionId;
-				loadPacks(selectedSubsectionId); // Для раздела загружаем тесты
+			var buttons_section = document.querySelectorAll('.btn-subsection');
+			buttons_section.forEach(function (btn) {
+				btn.classList.remove('selected');
+			});
+			button.classList.add('selected');
+			var selectedSubsectionId = button.dataset.subsectionId;
+			loadPacks(selectedSubsectionId);
 		}
 
 		function selectButtonSection(button) {
-				var selectedSectionId = button.dataset.sectionId;
-				var selectedButtons = document.querySelectorAll('.btn-section');
-				
-				selectedButtons.forEach(function(btn) { //Указываем какая кнопка была выбрана
-						btn.classList.remove('selected');
-				});
-				button.classList.add('selected');
+			var selectedSectionId = button.dataset.sectionId;
+			var selectedButtons = document.querySelectorAll('.btn-section');
 
-				var buttonsContainer = document.querySelector('.subsection-container');
-				if (buttonsContainer) { //Включаем отображение разделов и тем
-						buttonsContainer.style.display = 'flex';
-				} else {
-						console.error('Элемент с классом "subsection-container" не найден.');
-				}
+			selectedButtons.forEach(function (btn) {
+				btn.classList.remove('selected');
+			});
+			button.classList.add('selected');
 
-				loadSubsections(selectedSectionId); // Загружаем разделы для выбранного предмета
-				
-				var buttonsContainer = document.querySelector('.section-container');
-				if (buttonsContainer) {
-						buttonsContainer.style.display = 'none'; //Выключаем блок с предметами
-				} else {
-						console.error('Элемент с классом "section-container" не найден.');
-				}
+			var buttonsContainer = document.querySelector('.subsection-container');
+			if (buttonsContainer) {
+				buttonsContainer.style.display = 'flex';
+			} else {
+				console.error('Элемент с классом "subsection-container" не найден.');
+			}
+
+			loadSubsections(selectedSectionId);
+
+			var buttonsContainer = document.querySelector('.section-container');
+			if (buttonsContainer) {
+				buttonsContainer.style.display = 'none';
+			} else {
+				console.error('Элемент с классом "section-container" не найден.');
+			}
 		}
 
 		function loadPacks(subsectionId) {
-				var packsList = document.querySelector('.topics-list');  // Элемент, куда будут добавляться кнопки паков
-				var sectionId = document.querySelector('.buttons-container .selected').dataset.sectionId;  // ID выбранной секции
+			var packsList = document.querySelector('.topics-list');
+			var sectionId = document.querySelector('.buttons-container .selected').dataset.sectionId;
+			fetch(`/api/pack/?subsection_id=${subsectionId}`)
+				.then(response => response.json())
+				.then(data => {
+					var fragment = document.createDocumentFragment();
+					var index = 1;
+					data.forEach(pack => {
+						var btn = document.createElement('button');
+						btn.classList.add('btn-pack');
 
-				fetch(`/get_packs/${subsectionId}/`)  // Отправляем AJAX-запрос для получения списка паков
-						.then(response => response.json())
-						.then(data => {
-								var fragment = document.createDocumentFragment();  // Создаем пустой фрагмент для добавления элементов
-								var index = 1;
-								data.forEach(pack => {
-										var btn = document.createElement('button');
-										btn.classList.add('btn-pack');  // Добавляем классы для кнопки пака
-										btn.textContent = "Тест " + index++;  // Название пака
-										btn.dataset.packId = pack.id;  // ID пака для отправки на бэк
+						var textSpan = document.createElement('span');
+						textSpan.textContent = "Тест " + index++;
+						btn.appendChild(textSpan);
 
-										btn.addEventListener('click', function() {
-												redirectToPackTest(pack.id);  // Вызываем функцию для перенаправления на страницу теста по ID пака
-										});
+						var fillDiv = document.createElement('div');
+						fillDiv.classList.add('fill');
 
-										fragment.appendChild(btn);  // Добавляем кнопку в фрагмент
-								});
-
-								packsList.innerHTML = '';  // Очищаем предыдущие паки
-								
-								var testsTextBlock = document.querySelector('.tests-textblock');
-								console.log(fragment.childNodes.length);
-								if(fragment.childNodes.length > 0){
-										packsList.appendChild(fragment);  // Добавляем все элементы из фрагмента на страницу
-								}
-								else{
-									testsTextBlock.innerHTML = '';
-									testsTextBlock.textContent = 'Тесты скоро появятся';
-								}
-						})
-						.catch(error => {
-								console.error('Error fetching packs:', error);
+						btn.appendChild(fillDiv);
+						var solvedPercent = pack.solved_percent || 0;
+						setTimeout(() => {
+							fillDiv.style.width = solvedPercent + '%';
+						}, 100);
+						btn.addEventListener('click', function () {
+							redirectToPackTest(pack.id);
 						});
+						fragment.appendChild(btn);
+					});
+
+					packsList.innerHTML = '';
+
+					if (fragment.childNodes.length > 0) {
+						packsList.appendChild(fragment);
+						const buttons = packsList.querySelectorAll('.btn-pack');
+						setTimeout(() => {
+							buttons.forEach(btn => btn.classList.add('visible'));
+						}, 100);
+					} else {
+						var testsTextBlock = document.querySelector('.tests-textblock');
+						testsTextBlock.innerHTML = '';
+						testsTextBlock.textContent = 'Тесты скоро появятся';
+					}
+				})
+				.catch(error => {
+					console.error('Error fetching packs:', error);
+				});
+
 		}
+
 		function redirectToPackTest(packId) {
-				window.location.href = `/get_tasks_for_pack/${packId}/`;  // Перенаправляем пользователя на страницу с тестом для выбранного пака
+			window.location.href = `/tests/test/?pack_id=${packId}`;
 		}
-		function redirectToTest() {
-				var selected_themes = JSON.parse(localStorage.getItem('selected_themes'));// Проверяем, появились ли selected_themes в localStorage
-				
-				if (JSON.stringify(selected_themes).length > 2){
-						fetch('/get_selected_tasks/', {
-										method: 'POST',
-										headers: {
-												'Content-Type': 'application/json',
-												'X-CSRFToken': '{{ csrf_token }}',
-										},
-										body: JSON.stringify(selected_themes),
-								})
-								.then(response => response.json())
-								.then(data => {
-										if ((Object.keys(data.tasks).length) > 0) {
-												window.location.href = '/test';
-										}
-										else{
-												message = "Чтобы составить тест, нужно выбрать тесты с заданиями";
-												alert(message);
-										}
-								})
-								.catch(error => {
-										console.error('Error fetching tasks:', error);
-								});
-					}
-					else{
-								message = "Чтобы составить тест, нужно выбрать тесты для решения";
-								alert(message);
-					}
-				
+
+		function redirectToExams() {
+			window.location.href = '/exams/';
 		}
-		function redirectToTests() {
-				window.location.href = '/tests/';
-		}
-</script>
-{% endblock %}
+	</script>
+	{% endblock %}

@@ -1,0 +1,42 @@
+.section-banner-container {
+	display: flex;
+	flex-wrap: wrap;
+	/* height: 100%; */
+	/* margin: auto; */
+	padding-top: 20px;
+	justify-content: space-evenly;
+	text-align: center;
+}
+
+.links-container {
+	display: flex;
+	flex-wrap: wrap;
+	width: 100%;
+	margin-top: 20px;
+
+	margin-bottom: 20px;
+	gap: 20px;
+	justify-content: space-evenly;
+}
+
+.youtube-video {
+	width: calc(25% - 0px);
+}
+
+.no-subscription img {
+	height: 130px;
+}
+
+@media screen and (max-width: 620px) {
+	.no-subscription img {
+		height: auto;
+	}
+
+	.no-subscription p {
+		font-size: 20px;
+	}
+
+	.youtube-video {
+		width: calc(50% - 10px);
+	}
+}

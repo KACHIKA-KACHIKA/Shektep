@@ -1,0 +1,267 @@
+.section-container {
+	display: flex;
+	flex-wrap: wrap;
+	/* margin: auto; */
+	padding-top: 20px;
+	justify-content: space-evenly;
+	text-align: center;
+}
+
+.section-head {
+	font-family: "ALS Sector";
+	/* font-weight: bold; */
+	font-size: 30px;
+	text-decoration: none;
+}
+
+.btn-section {
+	background-color: #FFFFFF;
+	color: #000000;
+
+	width: calc(30% - 0px);
+	padding: 44px 12px;
+	margin-bottom: 15px;
+	margin-left: 15px;
+
+	border: solid;
+	border-width: 1px;
+	border-color: #006CDB;
+	border-radius: 16px;
+
+	cursor: pointer;
+
+	font-family: "ALS Sector";
+	font-size: 22px;
+	text-decoration: none;
+}
+
+.btn-section:hover {
+	background-color: #7BBAF4;
+}
+
+.btn-section.selected {
+	background-color: #7BBAF4;
+}
+
+.subsection-container {
+	display: flex;
+	flex-wrap: wrap;
+	padding-top: 24px;
+	width: 100%;
+	justify-content: space-around;
+	display: none;
+}
+
+.vertical-buttons {
+	display: flex;
+	width: 100%;
+	justify-content: center;
+	align-items: center;
+}
+
+.btn-subsection {
+	background-color: #DCEEFF;
+	color: #000000;
+
+	padding: 20px 10px;
+	margin-right: 10px;
+
+	border: none;
+	border-radius: 16px;
+
+	cursor: pointer;
+	width: 22%;
+	height: 100%;
+
+	font-family: "ALS Sector";
+	font-size: 26px;
+	text-decoration: none;
+}
+
+.btn-pack {
+	position: relative;
+	overflow: hidden;
+	color: #000000;
+	width: 150px;
+	white-space: nowrap;
+	padding: 12px 36px;
+	margin-bottom: 20px;
+
+	border: solid;
+	border-width: 1px;
+	border-color: #006CDB;
+	border-radius: 60px;
+	cursor: pointer;
+	font-family: "ALS Sector";
+	font-size: 21px;
+	text-decoration: none;
+	background-color: #ffffff;
+	opacity: 0; /* Изначально кнопки невидимы */
+	transform: translateY(20px); /* Сдвиг по вертикали */
+	transition: opacity 0.5s ease, transform 0.5s ease; /* Анимация появления */
+}
+
+.btn-pack .fill {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 0;
+	/* Начальная ширина 0% */
+	background-color: #4caf50;
+	z-index: 0;
+	/* Отправляем элемент заполнения на задний план */
+	transition: width 1s ease;
+	/* Анимация ширины */
+}
+.btn-pack.visible {
+	opacity: 1; /* Видимые кнопки */
+	transform: translateY(0); /* Возвращаем в начальное положение */
+}
+.btn-pack span {
+	position: relative;
+	z-index: 1;
+	/* Текст отображается поверх фона */
+}
+
+.btn-pack:hover {
+	background-color: #DCEEFF;
+}
+
+.btn-subsection:hover {
+	background-color: #7bbaf4;
+}
+
+.btn-subsection.selected {
+	background-color: #7BBAF4;
+}
+
+.topics-list {
+	display: flex;
+	flex-wrap: wrap;
+
+	justify-content: center;
+	gap: 10px;
+	margin-top: 20px;
+	width: 100%;
+	flex-grow: 1;
+	font-size: 22px;
+	text-decoration: none;
+}
+
+.topics-list label {
+	flex-grow: 1;
+	margin-bottom: 10px;
+}
+
+.buttons-container {
+	display: flex;
+	justify-content: center;
+	flex-wrap: wrap;
+
+	margin: auto;
+	padding-top: 20px;
+	width: 100%;
+	/* margin-bottom: 20px; */
+	/* display: none; */
+}
+
+
+@media screen and (max-width: 1600px) {
+	.subsection-container {
+		flex-wrap: wrap;
+	}
+}
+
+@media screen and (max-width: 1020px) {
+	.subsection-container {
+		flex-wrap: wrap;
+
+	}
+
+	.motivate-text-steps {
+		font-size: 24px;
+	}
+
+	.motivate-text-step {
+		width: 100%;
+	}
+
+	.motivate-text-head {
+		font-size: 32px;
+	}
+
+	.section-head {
+		font-size: 30px;
+	}
+
+	.btn-section {
+		font-size: 22px;
+	}
+}
+
+@media screen and (max-width: 881px) {
+	.btn-subsection {
+		width: 100%;
+	}
+
+	.topics-list {
+		width: 100%;
+	}
+}
+
+@media screen and (max-width: 820px) {
+	.main-content {
+		width: 90%;
+	}
+
+	.topics-list {
+		margin-left: 0px;
+		justify-content: center;
+	}
+
+	.vertical-buttons {
+		justify-content: space-evenly;
+	}
+
+	.motivate-text-steps {
+		font-size: 24px;
+	}
+
+	.motivate-text-head {
+		font-size: 30px;
+	}
+
+	.section-head {
+		font-size: 28px;
+	}
+
+	.btn-section {
+		font-size: 20px;
+	}
+}
+
+@media screen and (max-width: 620px) {
+	.motivate-text-steps {
+		font-size: 20px;
+	}
+
+	.btn-subsection {
+		font-size: 20px;
+	}
+
+	.motivate-text-head {
+		font-size: 22px;
+	}
+
+	.section-head {
+		font-size: 26px;
+	}
+
+	.btn-section {
+		font-size: 18px;
+		width: calc(50% - 10px);
+		margin-bottom: 10px;
+		margin-left: 10px;
+	}
+}

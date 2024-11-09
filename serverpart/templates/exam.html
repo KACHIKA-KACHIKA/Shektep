@@ -1,0 +1,255 @@
+{% extends "./base.html" %}
+{% block content %}
+<div class="main-container-test">
+	<div class="main-content-test">
+		{% csrf_token %}
+		<div id="error-message" style="display: none; color: rgb(227, 128, 128);">Экзамен не смог сформироваться или нет
+			доступа</div>
+	</div>
+	<div class="btn-endtest">
+		<button class="btn-primary" id="finishExamButton" onclick="finishExam()">Завершить экзамен</button>
+		<button class="btn-primary" id="startSectionButton" onclick="startSection()">Начать раздел</button>
+	</div>
+</div>
+<script>
+	// Текущий этап
+	let currentStage = 1;
+	let sectionResults = {
+		"1": 0,  // Математика 1 часть
+		"2": 0,  // Математика 2 часть
+		"3": 0,  // Аналогия и дополнение предложений
+		"4": 0,  // Практическая часть русского языка
+	};
+	let sectionIds = {};
+	let sectionInstructions = {
+		"1": `<br><strong>Инструкция</strong><br><br>
+		Вопросы содержат две величины, каждая из которых заключена в прямоугольную рамку: 
+		одна в <u><strong>КОЛОНКЕ А</strong></u>, другая в <strong>КОЛОНКЕ Б</strong>. Вам нужно <strong>СРАВНИТЬ</strong> эти две величины и 
+		выбрать ответ.<br>
+		• (А), если величина в <u><strong>КОЛОНКЕ А</strong></u> больше;<br>
+		• (Б), если величина в <u><strong>КОЛОНКЕ Б</strong></u> больше;<br>
+		• (В), если обе величины равны;<br>
+		• (Г), если по имеющейся информации невозможно определить, какая из этих величин больше, 
+		либо установить их равенство.<br><br>
+		В некоторых вопросах дается дополнительная информация о сравниваемых величинах. 
+		Она располагается над сравниваемыми величинами и <strong>НЕ ЗАКЛЮЧЕНА</strong> в рамки. 
+		Символ, присутствующий в обеих колонках задания, имеет одинаковое значение для величин в 
+		<u><strong>КОЛОНКЕ А</strong></u> и в <u><strong>КОЛОНКЕ Б</strong></u>.<br><br>
+		Числа: В тесте используются только действительные числа.<br><br>
+		Фигуры: Фигуры, которые приводятся вместе с заданиями, дают полезную для решения информацию.
+		Фигуры изображены в масштабе и на плоскости, <strong>ЗА ИСКЛЮЧЕНИЕМ</strong> специально оговоренных 
+		случаев.`,
+		"2": `<br><strong>Инструкция</strong><br><br>
+		На каждый вопрос дается пять вариантов ответа. Они обозначены буквами (А), (Б), 
+		(В), (Г), (Д).<br><br>
+		Вам нужно выбрать лишь один правильный вариант ответа.<br><br>
+		<u><strong>Числа</strong></u>: В тесте используются только действительные числа.<br><br>
+		<u><strong>Фигуры</strong></u>: Фигуры, которые приводятся вместе с заданиями, дают полезную для решения информацию. 
+		Фигуры изображены в масштабе и на плоскости, <strong>ЗА ИСКЛЮЧЕНИЕМ</strong> специально оговоренных случаев.
+		`,
+		"3": `<br><strong>Инструкция к аналогии</strong><br><br>
+		Каждое задание состоит из пяти пар слов. Выделенная <strong>жирным шрифтом</strong> пара показывает
+		образец отношений между двумя словами. Определите, какие отношения существуют между
+		словами в этой паре, а затем выберите в вариантах ответа пару слов с такими же отношениями.<br><br>
+		Порядок слов в выбранном вами ответе должен быть таким же, как и в образце.
+		<br><br><strong>Инструкция к дополнениям</strong><br><br>
+		В каждом задании дано предложение, в которое имеется от двух до пяти пробелов. Ниже будут
+		приведены четыре группы слов для дополнения этого предложения. Отметьте вариант ответа,
+		наиболее соответствующий смыслу предложения.`,
+		"4": `<br><strong>Инструкция</strong><br><br>
+		В тесте есть задания, при выполнении которых вам нужно:<br>
+		• проанализировать слова, словосочетания или предложения и найти правильный ответ в приведённых вариантах;<br>
+		• вставить буквы;<br>
+		• поставить знаки препинания;<br>
+		• достроить предложение;<br>
+		• подобрать синонимы и антонимы;<br>
+		• найти ошибку.<br><br>
+		Пропуски букв в словах и слов в предложениях обозначены тремя точками.<br>
+		Материал для анализа (предложения, слова, словосочетания) в задании помещён под вопросом и <em>выделен курсивом</em>.<br><br>
+		В заданиях, где есть скобки, вам нужно выбрать вариант слитного, раздельного или дефисного написания слов.<br>
+		В предложениях с пропущенными знаками препинания предполагаемое место постановки знака обозначено <u>подчёркнутым пробелом</u> или цифрой.`
+	};
+
+	document.addEventListener('DOMContentLoaded', function () {
+		const urlParams = new URLSearchParams(window.location.search);
+		const examId = urlParams.get('exam_id');
+
+		fetch(`/api/exam/?exam_id=${examId}`)
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('Ошибка доступа или некорректные данные');
+				}
+				return response.json();
+			})
+			.then(examData => {
+				sectionIds = {
+					"1": [examData.fk_math_1_id],
+					"2": [examData.fk_math_2_id],
+					"3": [examData.fk_analogy_id, examData.fk_addition_id],
+					"4": [examData.fk_practical_rus_id]
+				};
+				showInstruction(currentStage);
+				// document.getElementById('startSectionButton').style.display = 'inline-block';
+			})
+			.catch(error => {
+				document.getElementById('error-message').style.display = 'block';
+				console.error('Ошибка при загрузке данных:', error);
+			});
+	});
+
+
+	function showInstruction(stage) {
+		const instruction = sectionInstructions[stage];
+		const mainContent = document.querySelector('.main-content-test');
+		mainContent.innerHTML = `<div>${instruction}</div>`;
+
+		const startButton = document.getElementById('startSectionButton');
+		startButton.textContent = 'Начать раздел';
+		startButton.style.display = 'inline-block';
+	}
+
+	function startSection() {
+		const section = sectionIds[currentStage];
+		if (section) {
+			const taskPromises = section.map(id => fetch(`/api/task/?pack_id=${id}`).then(response => response.json()));
+
+			Promise.all(taskPromises)
+				.then(responses => {
+					const allTasks = responses.flatMap(response => response.tasks_data);
+					renderTasks(allTasks);
+				})
+				.catch(error => console.error('Ошибка при загрузке заданий:', error));
+			const startButton = document.getElementById('startSectionButton');
+			startButton.textContent = 'Сдать раздел';
+			startButton.onclick = finishSection;
+		}
+	}
+	function finishSection() {
+		var selectedAnswers = collectSelectedAnswers();
+		const packIds = sectionIds[currentStage];
+		const taskAnswerPromises = packIds.map(id => fetch(`/api/task_answer/?pack_id=${id}`).then(response => response.json()));
+
+		Promise.all(taskAnswerPromises)
+			.then(responses => {
+				const allCorrectAnswers = responses.flatMap(response => response.tasks_data);
+				const totalTasks = allCorrectAnswers.length;
+				let correctAnswersCount = 0;
+				selectedAnswers.forEach(answer => {
+					const correctAnswer = allCorrectAnswers.find(ans => ans.id === parseInt(answer.task_id));
+					if (correctAnswer && correctAnswer.answer === answer.selectedAnswer) {
+						correctAnswersCount++;
+					}
+				});
+				// const percentage = (correctAnswersCount / totalTasks) * 100;
+				sectionResults[currentStage] = correctAnswersCount;
+				currentStage++;
+				if (currentStage <= Object.keys(sectionIds).length) {
+					showInstruction(currentStage);
+					const startButton = document.getElementById('startSectionButton');
+					startButton.textContent = 'Начать раздел';
+					startButton.onclick = startSection;
+				} else {
+					alert("Экзамен завершен!");
+					finishExam();
+				}
+			})
+			.catch(error => console.error('Ошибка при загрузке правильных ответов:', error));
+	}
+
+	function collectSelectedAnswers() {
+		var selectedAnswers = [];
+		var radioButtons = document.querySelectorAll('input[type="radio"]:checked');
+		radioButtons.forEach(function (radioButton) {
+			var task_id = radioButton.name.split('_')[1];
+			var selectedAnswer = radioButton.nextElementSibling.textContent;
+			var taskDiv = radioButton.closest('.task');
+			var taskNumber = taskDiv.dataset.taskNumber;
+			selectedAnswers.push({ task_id: task_id, selectedAnswer: selectedAnswer, taskNumber: taskNumber });
+		});
+		return selectedAnswers;
+	}
+
+	function finishExam() {
+		const urlParams = new URLSearchParams(window.location.search);
+		const examId = urlParams.get('exam_id');
+		const encodedResults = encodeURIComponent(JSON.stringify(sectionResults));
+		window.location.href = `../result/?exam_id=${examId}&results=${encodedResults}`;
+	}
+
+	function renderTasks(tasks) {
+		var tasksContainer = document.querySelector('.main-content-test');
+		tasksContainer.innerHTML = '';  // Очищаем контейнер
+		var index = 1;
+
+		// Цикл для создания элементов заданий
+		tasks.forEach(function (task) {
+			var taskDiv = document.createElement('div');
+			taskDiv.classList.add('task');
+			taskDiv.classList.add('fade-in-block', 'bottom');
+			taskDiv.textContent = 'Задание ' + index;
+			taskDiv.dataset.taskNumber = index++;
+
+			var taskImageDiv = document.createElement('div');
+			taskImageDiv.classList.add('task-image');
+			var taskImage = document.createElement('img');
+			taskImage.src = task.task_image_url;
+			taskImage.alt = 'Task Image';
+			taskImageDiv.appendChild(taskImage);
+
+			var taskOptionsDiv = document.createElement('div');
+			taskOptionsDiv.classList.add('task-options');
+
+			var interactableFieldsDiv = document.createElement('div');
+			interactableFieldsDiv.classList.add('interactable-fields');
+
+			var answerInputDiv = document.createElement('div');
+			answerInputDiv.classList.add('answer-input');
+			var radioLabels = ['А', 'Б', 'В', 'Г'];
+			if (task.subsection == "Часть 2") {
+				radioLabels.push('Д');
+			}
+
+			radioLabels.forEach(function (label) {
+				var radioLabel = document.createElement('label');
+				var radioInput = document.createElement('input');
+				radioInput.type = 'radio';
+				radioInput.name = 'options_' + task.id;
+				var span = document.createElement('span');
+				span.textContent = label;
+				radioLabel.appendChild(radioInput);
+				radioLabel.appendChild(span);
+				answerInputDiv.appendChild(radioLabel);
+			});
+
+			interactableFieldsDiv.appendChild(answerInputDiv);
+			taskOptionsDiv.appendChild(interactableFieldsDiv);
+			taskDiv.appendChild(taskImageDiv);
+			taskDiv.appendChild(taskOptionsDiv);
+			tasksContainer.appendChild(taskDiv);
+			PlayAnimation()
+		});
+	}
+
+	function PlayAnimation() {
+		const fadeInBlocks = document.querySelectorAll('.fade-in-block');
+
+		function handleScroll() {
+			fadeInBlocks.forEach(block => {
+				const blockPosition = block.getBoundingClientRect().top;
+				const windowHeight = window.innerHeight;
+
+				// Проверяем, виден ли блок на экране
+				if (blockPosition < windowHeight + 100) {
+					block.classList.add('visible');
+				}
+			});
+		}
+
+		// Выполняем проверку при прокрутке
+		window.addEventListener('scroll', handleScroll);
+
+		// Выполняем проверку при загрузке страницы
+		handleScroll();
+	}
+</script>
+{% endblock %}

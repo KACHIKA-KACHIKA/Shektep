@@ -1,0 +1,181 @@
+{% extends "./base.html" %}
+{% block content %}
+<div class="main-content">
+	{% csrf_token %}
+
+	<div class="exams-container">
+		<!-- Контейнер для отображения шкал прогресса -->
+		<div class="exams-textblock" id="results-container">
+			<!-- Шкалы прогресса будут добавляться сюда динамически -->
+		</div>
+	</div>
+	
+	<div class="btn-endtest"> <button class="btn-primary" type="submit" onclick="window.location.href='{% url 'exams' %}'">Вернуться</button>
+	</div>
+</div>
+
+<script>
+	document.addEventListener('DOMContentLoaded', function () {
+		const urlParams = new URLSearchParams(window.location.search);
+		const results = urlParams.get('results');
+		const examId = urlParams.get('exam_id');
+
+		if (results && examId) {
+			const sectionResults = JSON.parse(decodeURIComponent(results));
+
+			// Запрашиваем данные о минимальных результатах (goal) по сложности
+			fetch(`/api/difficulty/?exam_id=${examId}`)
+				.then(response => response.json())
+				.then(data => {
+					const difficultyGoals = {
+						"1": data.difficulty_data.goal_math_1,
+						"2": data.difficulty_data.goal_math_2,
+						"3": data.difficulty_data.goal_analogy + data.difficulty_data.goal_addition, // Объединенная цель
+						// "4": data.difficulty_data.goal_reading,
+						"4": data.difficulty_data.goal_practical_rus
+					};
+
+					// Названия секций
+					const sectionNames = {
+						"1": "Математика 1 часть",
+						"2": "Математика 2 часть",
+						"3": "Аналогия и дополнение предложений",
+						// "4": "Чтение и понимание текста",
+						"4": "Практическая часть русского языка"
+					};
+
+					// Контейнер для добавления шкал
+					const resultsContainer = document.getElementById('results-container');
+					let isPassed = true;
+					// Генерируем шкалы для каждого раздела
+					Object.keys(sectionResults).forEach(stage => {
+						const correctAnswersCount = sectionResults[stage];
+						const goal = difficultyGoals[stage] || 0;
+						const maxTasks = 30;  // Максимум заданий для шкалы
+
+						// Создаем контейнер для каждой секции
+						const sectionDiv = document.createElement('div');
+						sectionDiv.classList.add('section-result');
+
+						// Название секции
+						const sectionTitle = document.createElement('h3');
+						sectionTitle.textContent = sectionNames[stage] || `Раздел ${stage}`;
+						sectionDiv.appendChild(sectionTitle);
+
+						// Создаем контейнер для прогресс-бара
+						const progressBarContainer = document.createElement('div');
+						progressBarContainer.classList.add('progress-bar-container');
+
+						// Создаем сам прогресс-бар
+						const progressBar = document.createElement('div');
+						progressBar.classList.add('progress-bar');
+
+						// Добавляем текст (сколько правильных из общего числа задач)
+						progressBar.textContent = `${correctAnswersCount}/${maxTasks} правильных`;
+
+						// Добавляем прогресс-бар внутрь контейнера
+						progressBarContainer.appendChild(progressBar);
+
+						// Вставляем прогресс-бар на страницу
+						sectionDiv.appendChild(progressBarContainer);
+
+						// Рассчитываем процент выполнения
+						const solvedPercent = (correctAnswersCount / maxTasks) * 100;
+
+						// Задержка для плавного заполнения шкалы прогресса
+						setTimeout(() => {
+							progressBar.style.width = `${solvedPercent}%`; // Устанавливаем ширину в зависимости от процента
+						}, 100); // Небольшая задержка для плавного запуска анимации
+
+
+						// Минимум правильных ответов
+						const goalText = document.createElement('p');
+						goalText.textContent = `Минимум для прохождения: ${goal}`;
+						sectionDiv.appendChild(goalText);
+						// Проверяем, прошел ли раздел
+						if (correctAnswersCount < goal) {
+							isPassed = false; // Если хотя бы один раздел не пройден
+						}
+						// Добавляем все в основной контейнер
+						resultsContainer.appendChild(sectionDiv);
+					});
+					// Отправка результатов экзамена
+					if (isPassed) {
+						// Экзамен пройден, отправляем ID экзамена
+						fetch('/api/solve_exam/', {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+								'X-CSRFToken': '{{ csrf_token }}',
+							},
+							body: JSON.stringify({ exam_id: examId })
+						})
+							.then(response => {
+								if (response.ok) {
+									console.log('Экзамен успешно зафиксирован как пройден.');
+								} else {
+									console.error('Ошибка при фиксации экзамена:', response.statusText);
+								}
+							})
+							.catch(error => console.error('Ошибка при отправке результатов:', error));
+					} else {
+						fetch('/api/solve_exam/', {
+							method: 'DELETE',
+							headers: {
+								'Content-Type': 'application/json',
+								'X-CSRFToken': '{{ csrf_token }}',
+							},
+							body: JSON.stringify({ exam_id: examId }),
+						})
+							.then(response => {
+								if (!response.ok && response.status !== 404) {
+									throw new Error(response.status);
+								}
+							})
+							.catch(error => {
+								if (error.message !== '404' && error.message !== 'Failed to fetch') {
+									console.error(error);  // Ошибки кроме 404 можно выводить
+								}
+							});
+					}
+				})
+				.catch(error => console.error('Ошибка при загрузке данных о сложности:', error));
+		}
+	});
+
+</script>
+
+<style>
+	.section-result {
+		/* margin-bottom: 20px; */
+	}
+
+	.progress-bar-container {
+		background-color: #e0e0e0;
+		border-radius: 8px;
+		overflow: hidden;
+		width: 100%;
+		height: 30px;
+	}
+
+	.progress-bar {
+		background-color: #4caf50;
+		height: 100%;
+		text-align: center;
+		color: white;
+		line-height: 30px;
+		/* padding-left: 5px; */
+		text-indent: 10px;
+		width: 0;
+		transition: width 1s ease;
+		position: relative;
+		z-index: 1;
+	}
+	.exams-textblock{
+		width: 100%;
+    display: flex;
+    flex-direction: column;
+
+	}
+</style>
+{% endblock %}

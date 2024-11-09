@@ -1,9 +1,11 @@
+import os
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from django.utils.html import mark_safe
-import os
+
+from videoplayer.models import Video
 
 class Section(models.Model):
     name = models.CharField(max_length=100)
@@ -13,17 +15,19 @@ class Section(models.Model):
 
 class Subsection(models.Model):
     name = models.CharField(max_length=100)
-    section = models.ForeignKey(Section, on_delete=models.CASCADE)  # Связь с секцией
+    section = models.ForeignKey(Section, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
 
 class Pack(models.Model):
     text_field = models.TextField()
-    subsection = models.ForeignKey(Subsection, on_delete=models.CASCADE)  # Связь с подразделом
+    subsection = models.ForeignKey(Subsection, on_delete=models.CASCADE)
+    is_published = models.BooleanField(default=True)
+    video = models.ForeignKey(Video, on_delete=models.SET_NULL, null=True, blank=True, related_name='pack_video') # Закоментить перед первой миграцией
 
     def __str__(self):
-        return f"Pack: {self.subsection} № {self.id}"  # Показывать первые 50 символов текста
+        return f"Pack: {self.subsection} № {self.id}"
 
 class Task(models.Model):
     task_image = models.ImageField(upload_to='task_images/')
@@ -37,7 +41,7 @@ class Task(models.Model):
     ]
     
     answer = models.TextField(choices=ANSWER_CHOICES)
-    pack_id = models.ForeignKey(Pack, on_delete=models.CASCADE)  # Связь с Pack
+    pack_id = models.ForeignKey(Pack, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"Task {self.task_image}"
@@ -56,29 +60,25 @@ def delete_task_images(sender, instance, **kwargs):
             os.remove(instance.task_image.path)
             print("Удалил " + instance.task_image.path)
 
-class Test(models.Model):
-    test_number = models.IntegerField(unique=True, editable=False)
-    name = models.CharField(max_length=100)
-    tasks = models.ManyToManyField(Task)
-
-    def save(self, *args, **kwargs):
-        existing_tests_count = Test.objects.count()
-        new_test_number = existing_tests_count + 1
-        while Test.objects.filter(test_number=new_test_number).exists():
-            new_test_number += 1
-        self.test_number = new_test_number
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"Тест {self.test_number}: {self.name}"
-
 class SolvedTasks(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Связь с пользователем
-    task = models.ForeignKey(Task, on_delete=models.CASCADE)  # Связь с заданием
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"Пользователь: {self.user.username}, Задание: {self.task.task_number}"
+        return f"Пользователь: {self.user.username}, Задание: {self.task.pk}"
 
     class Meta:
         verbose_name = 'SolvedTasks'
+        verbose_name_plural = verbose_name
+
+class SolvedPacks(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    pack = models.ForeignKey(Pack, on_delete=models.CASCADE)
+    percent = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"Пользователь {self.user.username} решил тест {self.pack.pk} на {self.percent}%"
+
+    class Meta:
+        verbose_name = 'SolvedPacks'
         verbose_name_plural = verbose_name

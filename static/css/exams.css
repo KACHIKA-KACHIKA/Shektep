@@ -1,0 +1,105 @@
+.tests-textblock {
+	display: flex;
+	justify-content: center;
+	margin-top: 24px;
+	margin-bottom: 12px;
+	font-family: "ALS Sector";
+	font-size: 28px;
+	text-decoration: none;
+}
+
+.exams-buttons-container {
+	display: flex;
+	justify-content: flex-start;
+	flex-wrap: wrap;
+	gap: 20px;
+
+	width: 100%;
+}
+
+.exams-container {
+	justify-content: space-evenly;
+	flex-wrap: wrap;
+
+	padding-top: 12px;
+	width: 100%;
+}
+
+.btn-exam {
+	background-color: #ffffff;
+	color: #000000;
+
+	width: 200px;
+	white-space: nowrap;
+	padding: 12px 36px;
+
+	border: solid;
+	border-radius: 16px;
+	border-width: 1px;
+	border-color: #7bbaf4;
+
+	cursor: pointer;
+
+	font-family: "ALS Sector";
+	font-size: 21px;
+	text-decoration: none;
+}
+
+.btn-exam:hover {
+	background-color: #7bbaf4;
+}
+
+.btn-exam:disabled {
+	background-color: #f8f8f8;
+
+	border: solid;
+	border-radius: 16px;
+	border-width: 1px;
+	border-color: #cccccc;
+}
+
+.btn-exam:disabled:hover {
+	background-color: #ccc;
+	cursor: not-allowed;
+	/* Меняет курсор на запрещающий */
+	color: inherit;
+}
+
+.section-paragraph {
+	display: flex;
+	justify-content: center;
+	font-weight: 100;
+	margin-top: 26px;
+	margin-bottom: 0px;
+}
+
+#finishExamButton {
+	border-color: red;
+	/* Начальный цвет границы */
+	transition: border-color 0.3s ease;
+	/* Плавный переход */
+}
+
+#finishExamButton:hover {
+	border-color: darkred;
+	/* Цвет границы при наведении */
+	background-color: rgba(255, 0, 0, 0.2);
+	/* Легкий красный фон при наведении (по желанию) */
+	cursor: pointer;
+	/* Меняет курсор на указатель */
+}
+
+.notification {
+	display: absolute;
+}
+
+@media screen and (max-width: 620px) {
+	.tests-textblock {
+		font-size: 24px;
+	}
+}
+@media screen and (max-width: 400px) {
+	.tests-textblock {
+		font-size: 20px;
+	}
+}

@@ -1,0 +1,49 @@
+#test-video {
+	display: block;
+	width: 50%;
+	height: auto;
+	margin-bottom: 20px;
+}
+
+.video-container {
+	display: none;
+	width: 100%;
+	justify-content: center;
+	flex-direction: column;
+	align-items: center;
+}
+
+.timings-container {
+	display: flex;
+	flex-direction: column;
+	gap:10px;
+	width: 50%;
+	margin-bottom: 24px;
+}
+
+.timing-btn {
+	background-color: #ffffff;
+	border: solid;
+	border-radius: 6px;
+	border-width: 1px;
+	border-color: #006CDB;
+	cursor: pointer;
+
+	padding: 5px 10px;
+	text-align: left;
+	font-family: "ALS Sector";
+	font-size: 18px;
+}
+
+/* .timing-btn:hover {
+	background-color: #7BBAF4;
+} */
+@media screen and (max-width: 1020px) {
+	#test-video {
+		width: 95%;
+	}
+
+	.timings-container {
+		width: 95%;
+	}
+}

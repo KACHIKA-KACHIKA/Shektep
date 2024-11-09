@@ -1,0 +1,33 @@
+.fade-in {
+	opacity: 0; /* Изначально элементы невидимы */
+	transform: translateY(20px); /* Легкий сдвиг вниз */
+	transition: opacity 0.6s ease, transform 0.6s ease; /* Анимация */
+}
+
+.fade-in.visible {
+	opacity: 1; /* Делаем элемент видимым */
+	transform: translateY(0); /* Возвращаем элемент на место */
+}
+
+.fade-in-block {
+	opacity: 0;
+	transform: translateY(100px);
+	transition: opacity 0.8s ease-out, transform 0.6s ease-out;
+}
+
+.fade-in-block.top {
+	transform: translateY(-100px);
+}
+
+.fade-in-block.visible {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+.fade-in-block:nth-child(1) {
+	transition-delay: 0.2s;
+}
+
+.fade-in-block:nth-child(2) {
+	transition-delay: 0.4s;
+}

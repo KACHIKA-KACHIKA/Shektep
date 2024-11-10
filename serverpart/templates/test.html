@@ -13,7 +13,7 @@
 		<video id="test-video" class="video-js " controls oncontextmenu="return false;" controls controlsList="nodownload">
 			<source id="video-source" type="video/mp4" />
 		</video>
-	<div id="video-timings" class="timings-container"></div>
+		<div id="video-timings" class="timings-container"></div>
 	</div>
 
 	<div class="btn-endtest"> <button class="btn-primary" type="submit" onclick="finishTest()">Завершить тест</button>
@@ -36,7 +36,8 @@
 				.then(data => {
 					const tasks = data.tasks_data;
 					if (tasks && tasks.length > 0) {
-						renderTasks(tasks);} else {
+						renderTasks(tasks);
+					} else {
 						console.error('Нет доступных заданий.');
 					}
 				})
@@ -63,7 +64,8 @@
 			.then(data => {
 				const videoElement = document.getElementById('test-video');
 				const videoSource = document.getElementById('video-source');
-				videoSource.src = `/api/video-stream/?pack_id=${packId}`;
+				videoSource.src = data.video_url;
+				// videoSource.src = `/api/video-stream/?pack_id=${packId}`;
 				videoElement.load();
 			})
 			.catch(error => {

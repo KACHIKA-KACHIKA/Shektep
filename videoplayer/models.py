@@ -6,10 +6,7 @@ class Video(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     image = models.ImageField(upload_to='video_preview/', null=True)
-    file = models.FileField(
-        upload_to='video/',
-        validators=[FileExtensionValidator(allowed_extensions=['mp4'])]
-    )
+    file_url = models.URLField(null=True, blank=True)
     create_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

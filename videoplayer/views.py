@@ -21,9 +21,6 @@ class VideoDetailAPIView(APIView):
 			video_id = Pack.objects.filter(pk=pack_id).values('video').first()
 			if not video_id:
 				return Response({"error": "No video found for the given pack_id"}, status=status.HTTP_404_NOT_FOUND)
-			
-			if not request.user.has_perm('view_video'):
-				return Response({'error': 'Access denied. Subscription required.'}, status=status.HTTP_403_FORBIDDEN)
 
 			video = Video.objects.get(pk=video_id['video'])
 

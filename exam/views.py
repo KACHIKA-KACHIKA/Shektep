@@ -120,9 +120,6 @@ class ExamsAPI(APIView):
 			
 			if not exams.exists():
 					return Response({'error': 'No exams available at the moment'}, status=status.HTTP_404_NOT_FOUND)
-			
-			if not request.user.has_perm('view_exam'):
-					return Response({'error': 'Access denied. Subscription required.'}, status=status.HTTP_403_FORBIDDEN)
 
 			return Response({'exams': exams}, status=status.HTTP_200_OK)
 	

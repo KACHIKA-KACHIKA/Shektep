@@ -1,6 +1,7 @@
 .vscode
 
 .pyc
+media/
 __pycache__/
 task_images/
 .venv

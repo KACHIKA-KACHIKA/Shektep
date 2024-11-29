@@ -79,8 +79,8 @@
 }
 
 .auth-section {
-	display: none;
-	/* display: flex; */
+	/* display: none; */
+	display: flex;
 	align-items: center;
 	justify-content: right;
 	white-space: nowrap;
@@ -391,9 +391,9 @@ body.menu-open {
 		width: 100%;
 	}
 /* Разблокировать для мобилки */
-	/* .auth-mobile {
+	.auth-mobile {
 		display: block;
-	} */
+	}
 }
 
 @media screen and (max-width: 820px) {

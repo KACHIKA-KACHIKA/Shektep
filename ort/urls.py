@@ -26,7 +26,7 @@ urlpatterns = [
 	path('api/solve_pack/', SolvePackAPI.as_view(), name='solve_task'), # Записать результат теста
 
 	path('api/video/', VideoDetailAPIView.as_view(), name='video-detail'),
-	path('api/video-stream/', VideoStreamingAPIView.as_view(), name='video-stream'),
+	# path('api/video-stream/', VideoStreamingAPIView.as_view(), name='video-stream'),
 	path('api/video_timing/', VideoTimingAPIView.as_view(), name='video-timings'),
 
 	path('', home, name='home'),

@@ -1,8 +1,6 @@
-from django.http import StreamingHttpResponse
 from django.core.exceptions import ObjectDoesNotExist
 from .models import Video, VideoTiming
 from serverpart.models import Pack
-from .services import open_file
 
 from rest_framework.views import APIView
 from rest_framework import status
@@ -23,9 +21,6 @@ class VideoDetailAPIView(APIView):
 			video_id = Pack.objects.filter(pk=pack_id).values('video').first()
 			if not video_id:
 				return Response({"error": "No video found for the given pack_id"}, status=status.HTTP_404_NOT_FOUND)
-			
-			if not request.user.has_perm('view_video'):
-				return Response({'error': 'Access denied. Subscription required.'}, status=status.HTTP_403_FORBIDDEN)
 
 			video = Video.objects.get(pk=video_id['video'])
 
@@ -34,6 +29,7 @@ class VideoDetailAPIView(APIView):
 					"title": video.title,
 					"description": video.description,
 					"image_url": video.image.url,
+					"video_url": video.file_url,  # Отдаем ссылку на видео
 					"created_at": video.create_at
 			}
 			return Response(video_data, status=status.HTTP_200_OK)
@@ -43,29 +39,6 @@ class VideoDetailAPIView(APIView):
 
 		except Exception as e:
 			return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-class VideoStreamingAPIView(APIView):
-	permission_classes = [HasAccessToVideo]
-	def get(self, request):
-		pk = request.GET.get('pack_id')
-		if not pk:
-				return Response({"detail": "pack_id not provided."}, status=400)
-
-		try:
-				video_id = Pack.objects.filter(pk=pk).values('video')
-		except Video.DoesNotExist:
-				return Response({"detail": "No Video matches the given query."}, status=404)
-		file, status_code, content_length, content_range = open_file(request, video_id[0]['video'])
-		response = StreamingHttpResponse(file, status=status_code, content_type='video/mp4')
-		response['Accept-Ranges'] = 'bytes'
-		response['Content-Length'] = str(content_length)
-		response['Cache-Control'] = 'no-cache'
-		response['Content-Range'] = content_range
-		response['Content-Disposition'] = 'inline'
-		response['X-Content-Type-Options'] = 'nosniff'
-
-		return response
-
 
 class VideoTimingAPIView(APIView):
 	permission_classes = [HasAccessToVideo]

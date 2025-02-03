@@ -11,11 +11,14 @@
 	<link rel="stylesheet" type="text/css" href="/static/css/mainstyles.css">
 	<link rel="stylesheet" type="text/css" href="/static/css/animations.css">
 	<link rel="stylesheet" type="text/css" href="/static/css/home_page.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/home.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/lesson.css">
 	<link rel="stylesheet" type="text/css" href="/static/css/header.css">
 	<link rel="stylesheet" type="text/css" href="/static/css/authentication.css">
 	<link rel="stylesheet" type="text/css" href="/static/css/test_creation.css">
 	<link rel="stylesheet" type="text/css" href="/static/css/youtube_videos.css">
 	<link rel="stylesheet" type="text/css" href="/static/css/test.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/modal_window.css">
 	<link rel="stylesheet" type="text/css" href="/static/css/result_table.css">
 	<link rel="stylesheet" type="text/css" href="/static/css/exams.css">
 	<link rel="stylesheet" type="text/css" href="/static/css/video_style.css">
@@ -28,7 +31,7 @@
 	<header class="header">
 		<div class="navbar">
 
-			<a class="logo" href="{% url 'home' %}">
+			<a class="logo" href="{% url 'landing' %}">
 				<img src="/static/media/LogoNorm.png" height="40" width="32" alt="Logo">
 				<span>ШЕКТЕП</span>
 			</a>
@@ -71,13 +74,12 @@
 
 			{% if user.is_authenticated %}
 			<div class="auth-section">
-				<div class="user-info">
-					<a class="user-name">
+				<div class="user-info"><a class="user-name" href="{% url 'home' %}">
+
 						{{ request.user.username|slice:":15" }}{% if request.user.username|length > 15 %}...{% endif %}
 					</a>
-					{% if end_date %}
-					<p class="subscription-info" style="color: #006CDB">
-						активна подписка до {{ end_date|date:"d.m.Y" }}
+					{% if end_date >= today %}
+					<p class="subscription-info" style="color: #006CDB">подписка до {{ end_date|date:"d.m.Y" }}
 					</p>
 					{% else %}
 					<p class="subscription-info" style="color: #656565">нет подписки</p>
@@ -180,10 +182,10 @@
 			<a class="tab" style="color: #656565"> о нас
 			</a> -->
 
-			<a class="tab" style="color: #656565" href="{% url 'tests' %}"> задания</a>
-			<a class="tab" style="color: #656565" href="{% url 'exams' %}"> экзамены</a>
-			<a class="tab" style="color: #656565" onclick="scrollToSubscription()"> подписка</a>
-			<a class="tab" style="color: #656565" onclick="scrollToMedia()"> о нас</a>
+		<a class="tab" style="color: #656565" href="{% url 'tests' %}"> задания</a>
+		<a class="tab" style="color: #656565" href="{% url 'exams' %}"> экзамены</a>
+		<a class="tab" style="color: #656565" onclick="scrollToSubscription()"> подписка</a>
+		<a class="tab" style="color: #656565" onclick="scrollToMedia()"> о нас</a>
 	</div>
 	</div>
 </footer>

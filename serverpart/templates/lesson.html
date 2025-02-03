@@ -1,0 +1,206 @@
+{% extends "./base.html" %}
+{% block content %}
+<div class="lesson-container">
+
+	{% if user.is_authenticated %}
+	{% if has_course_access %}
+	<h4 id="lesson-title">Видеоурок</h4>
+	<div class="lesson-video-container">
+		<div style="display: flex; width: 100%; flex-wrap: wrap;">
+			<div class="video-block">
+				<h1>Название ролика</h1>
+				<video id="lesson-video" class="video-js" controls oncontextmenu="return false;" controls
+					controlsList="nodownload">
+					<source id="video-source" type="video/mp4" />
+				</video>
+			</div>
+
+			<div class="timings-block">
+				<h1>Тайминги</h1>
+				<div id="video-timings" class="timings-container" style="width: 100%;"></div>
+			</div>
+		</div>
+		<div id="files-section" class="materials-container">
+			<h1>Материалы</h1>
+			<div class="material-info">
+				<a id="practice-link" class="material-item" href="#" download><img src="/static/media/pdf.svg"
+						alt="SVG Example">Практика</a>
+				<a id="theory-link" class="material-item" href="#" download><img src="/static/media/pdf.svg"
+						alt="SVG Example">Теория</a>
+				<a id="pack-type" class="material-item" href="#"><img src="/static/media/exam-svgrepo-com.svg"
+						alt="SVG Example">Тест</a>
+				<a id="exam-type" class="material-item" href="#"><img src="/static/media/exam-svgrepo-com.svg"
+						alt="SVG Example">Спидран</a>
+			</div>
+		</div>
+	</div>
+	{% else %}
+	<div class="auth-warning">
+		<h2>Доступ закрыт</h2>
+		<p>У вас нет доступа к курсу. Оформите подписку, чтобы получить доступ.</p>
+	</div>
+	{% endif %}
+	{% else %}
+	<div class="auth-warning">
+		<h2>Доступ закрыт</h2>
+		<p>Для просмотра личного кабинета необходимо <a href="{% url 'login' %}">войти в аккаунт</a>.</p>
+	</div>
+	{% endif %}
+
+</div>
+
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+		const urlParams = new URLSearchParams(window.location.search);
+		const lessonId = urlParams.get("lesson_id");
+
+		if (!lessonId) {
+			window.location.href = '/home/';
+			return;
+		}
+
+		// Слушаем событие скачивания материалов
+		const practiceLink = document.getElementById("practice-link");
+		const theoryLink = document.getElementById("theory-link");
+		const videoElement = document.getElementById("lesson-video");
+
+		practiceLink.addEventListener("click", function () {
+			updateLessonProgress(lessonId, 'downloaded_practice', true);
+		});
+
+		theoryLink.addEventListener("click", function () {
+			updateLessonProgress(lessonId, 'downloaded_theory', true);
+		});
+
+		videoElement.addEventListener("ended", function () {
+			updateLessonProgress(lessonId, 'video_rating', 5); // Например, ставим максимальную оценку
+		});
+
+		fetch(`/api/lesson/?lesson_id=${lessonId}`)
+			.then(response => response.json())
+			.then(data => updateLessonMaterials(data))
+			.catch(error => console.error("Ошибка загрузки урока:", error));
+	});
+
+	// Функция для обновления/создания прогресса пользователя
+	function updateLessonProgress(lessonId, field, value) {
+		if (!lessonId || !field || value === undefined) {
+			console.error("Некорректные данные для запроса", { lessonId, field, value });
+			return;
+		}
+		fetch(`/api/user_lesson_progress/`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-CSRFToken': '{{ csrf_token }}',
+			},
+			body: JSON.stringify({
+				lesson: lessonId,
+				field: field,
+				value: value,
+			})
+		})
+			.then(response => response.json())
+			.then(data => console.log('Progress updated', data))
+			.catch(error => console.error('Error updating progress', error));
+	}
+
+	function updateLessonMaterials(data) {
+		const practiceLink = document.getElementById("practice-link");
+		const theoryLink = document.getElementById("theory-link");
+		const packType = document.getElementById("pack-type");
+		const examType = document.getElementById("exam-type");
+
+		if (data.video_url) {
+			const videoContainer = document.querySelector('.lesson-video-container');
+			videoContainer.style.display = 'flex';
+			const videoTitle = document.querySelector('.video-block h1');
+			videoTitle.textContent = data.title || "Название ролика";
+			const videoElement = document.getElementById('lesson-video');
+			const videoSource = document.getElementById('video-source');
+			videoSource.src = data.video_url;
+			videoElement.load();
+			renderVideoTimings(data.video_id);
+		}
+
+		if (data.practice_url) {
+			practiceLink.href = data.practice_url;
+			practiceLink.style.display = "flex";
+		} else {
+			practiceLink.style.display = "none";
+		}
+
+		if (data.theory_url) {
+			theoryLink.href = data.theory_url;
+			theoryLink.style.display = "flex";
+		} else {
+			theoryLink.style.display = "none";
+		}
+
+		if (data.pack) {
+			packType.href = `/tests/test/?pack_id=${data.pack}`;
+			packType.style.display = "flex";
+		} else {
+			packType.style.display = "none";
+		}
+
+		if (data.exam) {
+			examType.href = `/exams/examing/?exam_id=${data.exam}`;
+			examType.style.display = "flex";
+		} else {
+			examType.style.display = "none";
+		}
+	}
+	function renderVideoTimings(videoId) {
+		const timingsContainer = document.getElementById('video-timings');
+
+		fetch(`/api/video_timing/?video_id=${videoId}`)  // Меняем параметр на video_id
+			.then(response => response.json())
+			.then(data => {
+				const timings = data.timings;
+				if (timings && Object.keys(timings).length > 0) {
+					timingsContainer.innerHTML = ''; // Очистка контейнера перед добавлением таймингов
+
+					for (let label in timings) {
+						const timingBtn = document.createElement('button');
+						timingBtn.textContent = `${timings[label]} - ${label}`;
+						timingBtn.classList.add('timing-btn');
+						timingBtn.classList.add('fade-in-block', 'bottom');
+
+						timingBtn.addEventListener('click', () => {
+							const videoElement = document.getElementById('lesson-video');
+							const [hours, minutes, seconds] = timings[label].split(':').map(Number);
+							const newTime = hours * 3600 + minutes * 60 + seconds;
+							videoElement.currentTime = newTime;
+							videoElement.play(); // Запуск видео после перемотки
+						});
+
+						timingsContainer.appendChild(timingBtn);
+					}
+				} else {
+					timingsContainer.innerHTML = '<p>Тайминги отсутствуют.</p>';
+				}
+				PlayAnimation();
+			})
+			.catch(error => {
+				console.error('Ошибка при загрузке таймингов:', error);
+				timingsContainer.innerHTML = '<p>Ошибка при загрузке таймингов.</p>';
+			});
+	}
+	function PlayAnimation() {
+		const fadeInBlocks = document.querySelectorAll('.fade-in-block');
+		function handleScroll() {
+			fadeInBlocks.forEach(block => {
+				const blockPosition = block.getBoundingClientRect().top;
+				const windowHeight = window.innerHeight;
+				if (blockPosition < windowHeight + 100) {
+					block.classList.add('visible');
+				}
+			});
+		}
+		window.addEventListener('scroll', handleScroll);
+		handleScroll();
+	}
+
+</script>
+{% endblock %}

@@ -6,6 +6,11 @@
 		<div id="error-message" style="display: none; color: rgb(227, 128, 128);">Экзамен не смог сформироваться или нет
 			доступа</div>
 	</div>
+
+	<div id="image-modal" class="image-modal">
+		<span id="close-modal" class="close-modal">&times;</span>
+		<img id="modal-image" class="modal-image" src="" />
+	</div>
 	<div class="btn-endtest">
 		<button class="btn-primary" id="finishExamButton" onclick="finishExam()">Завершить экзамен</button>
 		<button class="btn-primary" id="startSectionButton" onclick="startSection()">Начать раздел</button>
@@ -18,7 +23,8 @@
 		"1": 0,  // Математика 1 часть
 		"2": 0,  // Математика 2 часть
 		"3": 0,  // Аналогия и дополнение предложений
-		"4": 0,  // Практическая часть русского языка
+		"4": 0,  // Чтение и понимание текста
+		"5": 0,  // Практическая часть русского языка
 	};
 	let sectionIds = {};
 	let sectionInstructions = {
@@ -57,6 +63,11 @@
 		приведены четыре группы слов для дополнения этого предложения. Отметьте вариант ответа,
 		наиболее соответствующий смыслу предложения.`,
 		"4": `<br><strong>Инструкция</strong><br><br>
+		К текстам, приведенным в этом разделе, задаются вопросы по тому, что содержится, <br>утверждается или подразумевается в них.
+		Внимательно читайте каждый текст; правильным ответом<br>
+		является тот, который точнее всего подходит в данном случае. <br>Текст должен подтверждать
+		правильный ответ.`,
+		"5": `<br><strong>Инструкция</strong><br><br>
 		В тесте есть задания, при выполнении которых вам нужно:<br>
 		• проанализировать слова, словосочетания или предложения и найти правильный ответ в приведённых вариантах;<br>
 		• вставить буквы;<br>
@@ -86,10 +97,15 @@
 					"1": [examData.fk_math_1_id],
 					"2": [examData.fk_math_2_id],
 					"3": [examData.fk_analogy_id, examData.fk_addition_id],
-					"4": [examData.fk_practical_rus_id]
+					"4": examData.reading_block ?
+						[...new Set([
+							examData.reading_block.fk_reading_1,
+							examData.reading_block.fk_reading_2,
+							examData.reading_block.fk_reading_3
+						])] : [],  // Удаляем дубликаты
+					"5": [examData.fk_practical_rus_id]
 				};
 				showInstruction(currentStage);
-				// document.getElementById('startSectionButton').style.display = 'inline-block';
 			})
 			.catch(error => {
 				document.getElementById('error-message').style.display = 'block';
@@ -107,54 +123,148 @@
 		startButton.textContent = 'Начать раздел';
 		startButton.style.display = 'inline-block';
 	}
+	function renderReadingImages(images) {
+		const textBlock = document.querySelector('.main-content-test');
+		const imagesContainer = document.createElement('div');
+		imagesContainer.classList.add('reading-text-container');
 
+		images.forEach(imageUrl => {
+			const imgElement = document.createElement('img');
+			imgElement.src = imageUrl;
+			imgElement.classList.add('reading-text-image');
+
+			// Добавляем обработчик на клик для открытия изображения
+			imgElement.addEventListener('click', function () {
+				openModal(imageUrl); // Открываем модальное окно с изображением
+			});
+
+			imagesContainer.appendChild(imgElement);
+		});
+
+		textBlock.appendChild(imagesContainer);
+	}
+
+	// Функция для открытия модального окна
+	function openModal(imageUrl) {
+		const modal = document.getElementById('image-modal');
+		const modalImage = document.getElementById('modal-image');
+		console.log("imageUrl for modal w", imageUrl);
+		modalImage.src = imageUrl;
+		modal.style.display = 'flex'; // Показываем модальное окно
+
+		const closeBtn = document.getElementById('close-modal');
+		closeBtn.addEventListener('click', closeModal);
+
+		window.addEventListener('click', function (event) {
+			const modal = document.getElementById('image-modal');
+			if (event.target === modal) {
+				closeModal();
+			}
+		});
+	}
+
+	// Закрытие модального окна
+	function closeModal() {
+		const modal = document.getElementById('image-modal');
+		modal.style.display = 'none'; // Скрываем модальное окно
+	}
 	function startSection() {
 		const section = sectionIds[currentStage];
 		if (section) {
-			const taskPromises = section.map(id => fetch(`/api/task/?pack_id=${id}`).then(response => response.json()));
+			const tasksContainer = document.querySelector('.main-content-test');
+			tasksContainer.innerHTML = '';  // Очищаем контейнер
 
-			Promise.all(taskPromises)
-				.then(responses => {
-					const allTasks = responses.flatMap(response => response.tasks_data);
-					renderTasks(allTasks);
-				})
-				.catch(error => console.error('Ошибка при загрузке заданий:', error));
-			const startButton = document.getElementById('startSectionButton');
-			startButton.textContent = 'Сдать раздел';
-			startButton.onclick = finishSection;
+			// Функция для загрузки и отображения данных одного теста
+			const loadTaskData = async (taskId) => {
+				try {
+					const response = await fetch(`/api/task/?pack_id=${taskId}`);
+					const data = await response.json();
+
+					const readingImages = data.reading_images || [];
+					const tasks = data.tasks_data;
+
+					// Отображаем картинки и задания для текущего теста
+					if (readingImages.length > 0) {
+						renderReadingImages(readingImages);
+					}
+					renderTasks(tasks);
+				} catch (error) {
+					console.error('Ошибка при загрузке задания:', error);
+				}
+			};
+
+			// Функция для поочередной загрузки заданий
+			const loadTasksSequentially = async () => {
+				for (let i = 0; i < section.length; i++) {
+					await loadTaskData(section[i]);
+				}
+
+				// Меняем текст кнопки и добавляем обработчик после загрузки всех разделов
+				const startButton = document.getElementById('startSectionButton');
+				startButton.textContent = 'Сдать раздел';
+				startButton.onclick = finishSection;
+			};
+
+			// Начинаем поочередную загрузку
+			loadTasksSequentially();
 		}
 	}
-	function finishSection() {
+
+	async function finishSection() {
 		var selectedAnswers = collectSelectedAnswers();
 		const packIds = sectionIds[currentStage];
-		const taskAnswerPromises = packIds.map(id => fetch(`/api/task_answer/?pack_id=${id}`).then(response => response.json()));
 
-		Promise.all(taskAnswerPromises)
-			.then(responses => {
-				const allCorrectAnswers = responses.flatMap(response => response.tasks_data);
-				const totalTasks = allCorrectAnswers.length;
-				let correctAnswersCount = 0;
-				selectedAnswers.forEach(answer => {
-					const correctAnswer = allCorrectAnswers.find(ans => ans.id === parseInt(answer.task_id));
-					if (correctAnswer && correctAnswer.answer === answer.selectedAnswer) {
-						correctAnswersCount++;
-					}
-				});
-				// const percentage = (correctAnswersCount / totalTasks) * 100;
-				sectionResults[currentStage] = correctAnswersCount;
-				currentStage++;
-				if (currentStage <= Object.keys(sectionIds).length) {
-					showInstruction(currentStage);
-					const startButton = document.getElementById('startSectionButton');
-					startButton.textContent = 'Начать раздел';
-					startButton.onclick = startSection;
-				} else {
-					alert("Экзамен завершен!");
-					finishExam();
+		try {
+			// Запрашиваем правильные ответы для всех pack_id
+			const taskAnswerPromises = packIds.map(id =>
+				fetch(`/api/task_answer/?pack_id=${id}`).then(response => response.json())
+			);
+
+			const responses = await Promise.all(taskAnswerPromises);
+			const allCorrectAnswers = responses.flatMap(response => response.tasks_data);
+			const totalTasks = allCorrectAnswers.length;
+
+			let correctAnswersCount = 0;
+			let userCorrectAnswers = [];
+
+			selectedAnswers.forEach(answer => {
+				const correctAnswer = allCorrectAnswers.find(ans => ans.id === parseInt(answer.task_id));
+				if (correctAnswer && correctAnswer.answer === answer.selectedAnswer) {
+					correctAnswersCount++;
+					userCorrectAnswers.push({ task_id: answer.task_id }); // Сохраняем для отправки
 				}
-			})
-			.catch(error => console.error('Ошибка при загрузке правильных ответов:', error));
+			});
+
+			// Сохраняем правильно решенные задачи
+			for (const task of userCorrectAnswers) {
+				await fetch(`/api/solve_task/`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						"X-CSRFToken": "{{ csrf_token }}",
+					},
+					body: JSON.stringify(task)
+				});
+			}
+
+			// Обновляем результаты секции
+			sectionResults[currentStage] = correctAnswersCount;
+			currentStage++;
+
+			if (currentStage <= Object.keys(sectionIds).length) {
+				showInstruction(currentStage);
+				const startButton = document.getElementById('startSectionButton');
+				startButton.textContent = 'Начать раздел';
+				startButton.onclick = startSection;
+			} else {
+				alert("Экзамен завершен!");
+				finishExam();
+			}
+		} catch (error) {
+			console.error('Ошибка при обработке данных:', error);
+		}
 	}
+
 
 	function collectSelectedAnswers() {
 		var selectedAnswers = [];
@@ -178,7 +288,6 @@
 
 	function renderTasks(tasks) {
 		var tasksContainer = document.querySelector('.main-content-test');
-		tasksContainer.innerHTML = '';  // Очищаем контейнер
 		var index = 1;
 
 		// Цикл для создания элементов заданий

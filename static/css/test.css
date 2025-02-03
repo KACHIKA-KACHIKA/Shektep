@@ -12,6 +12,21 @@
 	margin-right: auto;
 }
 
+.reading-text-container {
+	display: flex;
+	flex-wrap: wrap; /* Перенос строк */
+	gap: 10px; /* Отступы между изображениями */
+	justify-content: center;
+}
+
+.reading-text-image {
+	width: calc(50% - 10px); /* 2 изображения в ряд */
+	max-width: 100%;
+	height: auto;
+	object-fit: contain; /* Подгоняем изображение */
+	border-radius: 5px;
+}
+
 .task {
 	width: 100%;
 	overflow: hidden;
@@ -21,10 +36,10 @@
 	width: 100%;
 	height: auto;
 }
-
+/* 
 img {
 	width: 100%;
-}
+} */
 
 .task-options {
 	align-items: center;

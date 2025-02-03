@@ -1,126 +1,230 @@
 {% extends "./base.html" %}
 {% block content %}
+<div class="home-container">
+	<h4>Личный кабинет</h4>
 
-<main class="main-content-home" style="background-color: #f6f6f6;">
-	<section class="section-block fade-in-block bottom" style="background-color: #ffffff">
-		<div class="home-section-container">
-			<div class="banner-block">
-				<div class="banner-block-text">
-					<h2>
-						Готовим к ОРТ на высокие баллы
-						и обьясняем сложное простым
-						языком
-					</h2>
-					<p>
-						Онлайн школа направленная на
-						повышение уровня образования
-						в Кыргызстане!
-					</p>
-				</div>
-				<div class="banner-photo">
-					<img src="/static/media/homepage/manas.png" alt="манас">
-				</div>
-				<form action="{% url 'tests' %}" style="width: 100%;">
-					<button class="btn-start">Решать задания</button>
-				</form>
+	{% if user.is_authenticated %}
+	{% if has_course_access %}
+	<div class="schedule-container">
+		<h2>Расписание</h2>
+		<img src="/static/media/home/shedule.png" alt="Тут должно быть расписание, но что-то пошло не так(">
+	</div>
+	<div class="statistics-container">
+		<h2>Статистика</h2>
+		<div class="statistics-block">
+			<h3>Количество решенных задач на курсе</h3>
+			<div class="progress-bar-container">
+				<div class="progress-bar" style="width: 0%;">--</div>
 			</div>
 		</div>
-	</section>
 
-	<section class="section-block fade-in-block bottom">
-		<div class="home-section-container">
-			<div class="motivate-text">
-				<div class="text-head ">Для кого</div>
-				<div class="motivate-text-steps">
-					<a class="motivate-text-step">
-						Учишься в школе и<br>
-						планируешь сдавать ОРТ
-					</a>
-					<a class="motivate-text-step">
-						Хочешь получить золотой<br>
-						сертификат
-					</a>
-					<a class="motivate-text-step">
-						Боишься, что базовых знаний<br>
-						не достаточно.
-					</a>
-					<a class="motivate-text-step">
-						Теряешь мотивацию<br>
-						в подготовке
-					</a>
-				</div>
-			</div>
+		<div class="lessons-container">
+			<h2>Уроки</h2>
+			<div class="lessons-block"></div>
 		</div>
-	</section>
 
-	<section class="section-block fade-in-block bottom" style="background-color: #7BBCFF">
-		<div class="home-section-container">
-			<div class="subscriprion-block">
-				<div class="text-head "> Что входит в подписку?</div>
-
-				<div class="subscriprion-items">
-
-					<div class="item">
-						<div class="item-name"> Видео-разборы </div>
-						<div class="item-description">
-							<p>После каждого теста будет доступно видео, в котором объясняется решение задач</p>
-							<img src="/static/media/homepage/video_example.png" alt="">
-						</div>
-					</div>
-
-					<div class="item">
-						<div class="item-name">Пробники</div>
-						<div class="item-description">
-							<p>Решай экзамены из нескольких разделов и старайся пройти необходимый порог</p>
-							<img src="/static/media/homepage/Exams.png" alt="">
-						</div>
-					</div>
-
-					<div class="item">
-						<div class="item-name">Статистика</div>
-						<div class="item-description">
-							<p>Следи за своим прогрессом и улучшай свои результаты, они будут отображаться на всех тестах </p>
-							<img src="/static/media/homepage/Test_progress.png" alt="">
-						</div>
-					</div>
-
-				</div>
-				<div class="subscribe-button-space">
-					<div class="subscribe-discription"> *Также будут доступны все эфиры в записи</div>
-					<a class="subscribe-button" style="border: none;" target="_blank" href="">Записаться</a>
-				</div>
-			</div>
+		<div class="exams-container">
+			<h2>Пробники</h2>
+			<table id="exam-results" style="width: 100%;">
+				<thead>
+					<tr>
+						<th class="fade-in-block bottom" style="width: 25%;">Февраль</th>
+						<th class="fade-in-block bottom" style="width: 25%;">Март</th>
+						<th class="fade-in-block bottom" style="width: 25%;">Апрель</th>
+						<th class="fade-in-block bottom" style="width: 25%;">Май</th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
 		</div>
-	</section>
+	</div>
+	{% else %}
+	<div class="auth-warning">
+		<h2>Доступ закрыт</h2>
+		<p>У вас нет доступа к курсу. Оформите подписку, чтобы получить доступ.</p>
+	</div>
+	{% endif %}
+	{% else %}
+	<div class="auth-warning">
+		<h2>Доступ закрыт</h2>
+		<p>Для просмотра личного кабинета необходимо <a href="{% url 'login' %}">войти в аккаунт</a>.</p>
+	</div>
+	{% endif %}
+</div>
 
-	<section class="section-block fade-in-block bottom">
-		<div class="home-section-container">
-			<div class="social-media-block">
-				<div class="text-head ">Наши соцсети</div>
-				<div class="media-container">
 
-					<div class="media-item">
-						<a target="_blank" href="https://www.youtube.com/@shektep"><img src="/static/media/youtube-svgrepo-com.svg"
-								alt="SVG Example"></a>
-						<a class="subscribe-button" target="_blank" href="https://www.youtube.com/@shektep"> Подписаться</a>
-					</div>
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+		fetch("/api/lessons/")
+			.then(response => response.json())
+			.then(data => {
+				console.log(data);
+				let totalTasks = 0;
+				let solvedTasks = 0;
 
-					<div class="media-item">
-						<a target="_blank" href="https://t.me/shektep"><img src="/static/media/telegram-svgrepo-com.svg"
-								alt="SVG Example"></a>
-						<a class="subscribe-button" target="_blank" href="https://t.me/shektep"> Подписаться</a>
-					</div>
+				data.forEach(lesson => {
+					totalTasks += lesson.total_tasks;
+					solvedTasks += lesson.solved_tasks;
+				});
 
-					<div class="media-block-text">
-						<p>Подписывайся, чтобы получать <br>актуальные новости и готовиться <br>вместе со всеми!</p>
-					</div>
+				const progressBar = document.querySelector('.progress-bar');
+				setTimeout(() => {
+					progressBar.style.width = `${(solvedTasks / totalTasks) * 100}%`;
+					progressBar.innerText = `${solvedTasks}/${totalTasks}`;
+				}, 200);
+				const lessonsBlock = document.querySelector(".lessons-block");
+				if (data.length > 0) {
+					lessonsBlock.innerHTML = "";
 
-				</div>
-			</div>
-		</div>
-	</section>
+					data.forEach(lesson => {
+						const lessonItem = document.createElement("a");
+						lessonItem.classList.add("lesson-item");
+						lessonItem.classList.add('fade-in-block', 'bottom');
+						lessonItem.href = `/lesson/?lesson_id=${lesson.id}`;
+						lessonItem.innerHTML = `${lesson.title} - ${lesson.upload_date}`;
 
-</main>
-<script src="../../static/js/animations.js">
+						lessonsBlock.appendChild(lessonItem);
+					});
+				} else {
+					lessonsBlock.innerHTML = "<p>Уроки отсутствуют.</p>";
+				}
+				renderExamResults();
+				PlayAnimation();
+			})
+			.catch(error => console.error("Ошибка загрузки уроков:", error));
+	});
+
+	function renderExamResults() {
+		const examIds = [11, 12, 0, 0]; // ID пробников
+		const tableBody = document.querySelector("#exam-results tbody");
+
+		// Очищаем перед вставкой новых данных
+		tableBody.innerHTML = "";
+		const resultsRow = document.createElement("tr");
+		resultsRow.classList.add('fade-in-block', 'bottom');
+
+		examIds.forEach((examId) => {
+			const scoreCell = document.createElement("td");
+
+			if (examId !== 0) {
+				const examLink = document.createElement("a");
+				examLink.href = `/exams/examing/?exam_id=${examId}`;
+				examLink.textContent = "0 б.";
+				examLink.style.textDecoration = "none"; // Убираем подчеркивание
+				examLink.style.color = "#000"; // Черный цвет
+				scoreCell.appendChild(examLink);
+
+				fetch(`/api/exam/?exam_id=${examId}`)
+					.then(response => response.json())
+					.then(examData => {
+						const fetchPromises = [];
+						const blockCounts = {
+							math: 0,
+							analogy: 0,
+							reading: 0,
+							grammar: 0
+						};
+
+						const packs = [
+							{ id: examData.fk_math_1_id, type: "math" },
+							{ id: examData.fk_math_2_id, type: "math" },
+							{ id: examData.fk_analogy_id, type: "analogy" },
+							{ id: examData.fk_addition_id, type: "analogy" },
+							{ id: examData.fk_practical_rus_id, type: "grammar" }
+						];
+
+						if (examData.fk_reading_id && examData.reading_block) {
+							packs.push({ id: examData.reading_block.fk_reading_1, type: "reading" });
+							packs.push({ id: examData.reading_block.fk_reading_2, type: "reading" });
+							packs.push({ id: examData.reading_block.fk_reading_3, type: "reading" });
+						}
+
+						packs.forEach(pack => {
+							if (pack.id) {
+								fetchPromises.push(
+									fetch(`/api/solve_task/?pack_id=${pack.id}`)
+										.then(response => response.json())
+										.then(data => {
+											blockCounts[pack.type] += data.solved_tasks.length;
+										})
+										.catch(error => {
+											console.error(`Ошибка загрузки solved_tasks для pack_id=${pack.id}:`, error);
+										})
+								);
+							}
+						});
+
+						Promise.all(fetchPromises).then(() => {
+							const totalScore =
+								getScore(blockCounts.math, mathScoreTable) +
+								getScore(blockCounts.analogy, analogyScoreTable) +
+								getScore(blockCounts.reading, readingScoreTable) +
+								getScore(blockCounts.grammar, grammarScoreTable);
+
+							examLink.textContent = `${totalScore} б.`;
+						});
+					})
+					.catch(error => {
+						console.error(`Ошибка загрузки данных для экзамена ${examId}:`, error);
+					});
+			} else {
+				scoreCell.textContent = "Ждем)"; // Если экзамена нет, ставим прочерк
+			}
+
+			resultsRow.appendChild(scoreCell);
+		});
+
+		tableBody.appendChild(resultsRow);
+	}
+
+
+	const mathScoreTable = [
+		0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29, 30, 31, 32, 33,
+		35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 55, 56, 57, 58, 59, 60, 61, 62, 63, 65, 66, 67
+	]; // 60 задач → 67 баллов
+
+	const analogyScoreTable = [
+		0, 7, 10, 12, 14, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 34, 36, 38, 40, 42, 44, 45, 47, 49, 51, 53, 55, 57, 59, 61, 63
+	]; // 30 задач → 63 балла
+
+	const readingScoreTable = [
+		0, 6, 8, 10, 12, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 32, 34, 36, 38, 40, 42, 44, 45, 47, 48, 50, 52, 53, 55, 57, 58
+	]; // 30 задач → 58 баллов
+
+	const grammarScoreTable = [
+		0, 6, 8, 9, 10, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 30, 32, 34, 35, 37, 39, 40, 42, 44, 46, 47, 49, 51, 53, 55, 57
+	]; // 30 задач → 57 баллов
+
+	function getScore(solved, scoreTable) {
+		// Проверка, если количество решённых задач больше, чем максимальное количество в таблице
+		return solved < scoreTable.length ? scoreTable[solved] : scoreTable[scoreTable.length - 1];
+	}
+
+	function PlayAnimation() {
+		const scheduleImage = document.querySelector(".schedule-container img");
+
+		if (scheduleImage.complete) {
+			scheduleImage.classList.add("show");
+		} else {
+			scheduleImage.addEventListener("load", () => {
+				scheduleImage.classList.add("show");
+			});
+		}
+		const fadeInBlocks = document.querySelectorAll('.fade-in-block');
+		function handleScroll() {
+			fadeInBlocks.forEach(block => {
+				const blockPosition = block.getBoundingClientRect().top;
+				const windowHeight = window.innerHeight;
+				if (blockPosition < windowHeight + 100) {
+					block.classList.add('visible');
+				}
+			});
+		}
+		window.addEventListener('scroll', handleScroll);
+		handleScroll();
+	}
+
 </script>
+
+
 {% endblock %}

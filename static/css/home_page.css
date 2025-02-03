@@ -145,6 +145,9 @@
 	font-size: 18px;
 	color: #333333;
 }
+.item-description img {
+	width: 100%;
+}
 
 .subscribe-button-space {
 	display: flex;

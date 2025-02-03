@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
-from .models import Subscription, SubscriptionList, AccessRight
+from .models import *
 
 class SubscriptionListInline(admin.TabularInline):
 		model = SubscriptionList
@@ -33,3 +33,5 @@ admin.site.register(User, UserAdmin)
 admin.site.register(Subscription)
 admin.site.register(SubscriptionList)
 admin.site.register(AccessRight)
+admin.site.register(Lesson)
+admin.site.register(UserLessonProgress)

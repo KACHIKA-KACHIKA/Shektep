@@ -8,34 +8,48 @@ from user.views import *
 from serverpart.views import *
 from videoplayer.views import *
 urlpatterns = [
-	path('api/subsection/', SubsectionAPI.as_view(), name="subsection"),
-	path('api/pack/', PackAPI.as_view(), name="pack"),
-	path('api/task/', TaskAPI.as_view(), name="task"),
+    path('api/subsection/', SubsectionAPI.as_view(), name="subsection"),
+    path('api/pack/', PackAPI.as_view(), name="pack"),
+    path('api/task/', TaskAPI.as_view(), name="task"),
 
-	path('api/task_answer/', TaskAnswerAPI.as_view(), name="task_answer"),
+    path('api/task_answer/', TaskAnswerAPI.as_view(), name="task_answer"),
 
-	path('api/exams/', ExamsAPI.as_view(), name='exams'),
+    path('api/exams/', ExamsAPI.as_view(), name='exams'),
 
-	path('api/exam/', ExamAPI.as_view(), name='exam'),
-	path('api/difficulty/', DifficultyAPI.as_view(), name='difficulty'),
-	# path('api/reading_block/', ReadingBlockAPI.as_view(), name='reading_block'),
+    path('api/exam/', ExamAPI.as_view(), name='exam'),
+    path('api/difficulty/', DifficultyAPI.as_view(), name='difficulty'),
+    path('api/reading_block/', ReadingBlockAPI.as_view(), name='reading_block'),
 
-	path('api/solve_exam/', CorrectExamAPI.as_view(), name='solve_exam'), # Записать результат решенного экзамена
-	path('api/solved_exam/', SolvedExamAPI.as_view(), name='solved_exam'), # Узнать какие экзамены решены, для открытия доступа к другим
+    # Записать результат решенного экзамена
+    path('api/solve_exam/', CorrectExamAPI.as_view(), name='solve_exam'),
+    # Узнать какие экзамены решены, для открытия доступа к другим
+    path('api/solved_exam/', SolvedExamAPI.as_view(), name='solved_exam'),
 
-	path('api/solve_pack/', SolvePackAPI.as_view(), name='solve_task'), # Записать результат теста
+    path('api/solve_pack/', SolvePackAPI.as_view(),
+         name='solve_pack'),  # Записать результат теста
+    path('api/solve_task/', CorrectTaskAPI.as_view(),
+         name='solve_task'),  # записать правильное задание
+         
+    path('api/video/', VideoDetailAPIView.as_view(), name='video-detail'),
+    path('api/video_timing/', VideoTimingAPIView.as_view(), name='video-timings'),
 
-	path('api/video/', VideoDetailAPIView.as_view(), name='video-detail'),
-	# path('api/video-stream/', VideoStreamingAPIView.as_view(), name='video-stream'),
-	path('api/video_timing/', VideoTimingAPIView.as_view(), name='video-timings'),
+    path('api/lesson/', LessonDetailAPIView.as_view(), name='lesson'),
+    path('api/lessons/', LessonsAPIView.as_view(), name='lessons'),
+    path('api/user_lesson_progress/',
+         UserLessonProgressView.as_view(), name='lesson_progress'),
 
-	path('', home, name='home'),
-	path('tests/', include('serverpart.urls')),
-	path('user/', include('user.urls')),
-	path('vp/', include('videoplayer.urls')),
-	path('exams/', include('exam.urls')),
-	path('admin/', admin.site.urls),
+    path('', landing, name='landing'),
+    path('home/', home, name='home'),
+    path('lesson/', lesson, name='lesson'),
+
+
+    path('tests/', include('serverpart.urls')),
+    path('user/', include('user.urls')),
+    path('vp/', include('videoplayer.urls')),
+    path('exams/', include('exam.urls')),
+    path('admin/', admin.site.urls),
 ]
 
 if settings.DEBUG:
-	urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)

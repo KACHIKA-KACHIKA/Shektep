@@ -1,15 +1,16 @@
 {% extends "./base.html" %}
 {% block content %}
 <div class="main-container-test">
-
 	<div class="main-content-test">
 		{% csrf_token %}
-		<div>Тест не смог сформироваться</div>
+		<div></div>
+		<div id="image-modal" class="image-modal">
+			<span id="close-modal" class="close-modal">&times;</span>
+			<img id="modal-image" class="modal-image" src="" />
+		</div>
 	</div>
 	<div class="tests-textblock"></div>
 	<div class="video-container">
-		<!-- <div id="video-details">
-		</div> -->
 		<video id="test-video" class="video-js " controls oncontextmenu="return false;" controls controlsList="nodownload">
 			<source id="video-source" type="video/mp4" />
 		</video>
@@ -35,9 +36,18 @@
 				})
 				.then(data => {
 					const tasks = data.tasks_data;
+					const readingImages = data.reading_images || [];
+
+					var tasksContainer = document.querySelector('.main-content-test');
+					if (readingImages.length > 0) {
+						renderReadingImages(readingImages);
+					}
 					if (tasks && tasks.length > 0) {
 						renderTasks(tasks);
 					} else {
+						const messageDiv = tasksContainer.querySelector('div');
+						messageDiv.textContent = 'Тест не смог сформироваться';
+
 						console.error('Нет доступных заданий.');
 					}
 				})
@@ -48,6 +58,52 @@
 			console.error('pack_id не найден в URL');
 		}
 	});
+	function renderReadingImages(images) {
+		const textBlock = document.querySelector('.main-content-test');
+		const imagesContainer = document.createElement('div');
+		imagesContainer.classList.add('reading-text-container');
+
+		images.forEach(imageUrl => {
+			const imgElement = document.createElement('img');
+			imgElement.src = imageUrl;
+			imgElement.classList.add('reading-text-image');
+
+			// Добавляем обработчик на клик для открытия изображения
+			imgElement.addEventListener('click', function () {
+				openModal(imageUrl); // Открываем модальное окно с изображением
+			});
+
+			imagesContainer.appendChild(imgElement);
+		});
+
+		textBlock.prepend(imagesContainer);
+	}
+
+	// Функция для открытия модального окна
+	function openModal(imageUrl) {
+		const modal = document.getElementById('image-modal');
+		const modalImage = document.getElementById('modal-image');
+		console.log("imageUrl for modal w", imageUrl);
+		modalImage.src = imageUrl;
+		modal.style.display = 'flex'; // Показываем модальное окно
+
+		const closeBtn = document.getElementById('close-modal');
+		closeBtn.addEventListener('click', closeModal);
+
+		window.addEventListener('click', function (event) {
+			const modal = document.getElementById('image-modal');
+			if (event.target === modal) {
+				closeModal();
+			}
+		});
+	}
+
+	// Закрытие модального окна
+	function closeModal() {
+		const modal = document.getElementById('image-modal');
+		modal.style.display = 'none'; // Скрываем модальное окно
+	}
+
 
 	function renderVideo(packId) {
 		const examsTextBlock = document.querySelector('.tests-textblock');
@@ -65,8 +121,8 @@
 				const videoElement = document.getElementById('test-video');
 				const videoSource = document.getElementById('video-source');
 				videoSource.src = data.video_url;
-				// videoSource.src = `/api/video-stream/?pack_id=${packId}`;
 				videoElement.load();
+				renderVideoTimings(data.id);
 			})
 			.catch(error => {
 				videoContainer.innerHTML = '';
@@ -81,14 +137,14 @@
 			});
 	}
 
-	function renderVideoTimings(packId) {
+	function renderVideoTimings(videoId) {
 		const timingsContainer = document.getElementById('video-timings');
 
-		fetch(`/api/video_timing/?pack_id=${packId}`)
+		fetch(`/api/video_timing/?video_id=${videoId}`)  // Меняем параметр на video_id
 			.then(response => response.json())
 			.then(data => {
 				const timings = data.timings;
-
+				console.log(timings);
 				if (timings && Object.keys(timings).length > 0) {
 					timingsContainer.innerHTML = ''; // Очистка контейнера перед добавлением таймингов
 
@@ -97,7 +153,6 @@
 						timingBtn.textContent = `${timings[label]} - ${label}`;
 						timingBtn.classList.add('timing-btn');
 						timingBtn.classList.add('fade-in-block', 'bottom');
-
 
 						timingBtn.addEventListener('click', () => {
 							const videoElement = document.getElementById('test-video');
@@ -108,7 +163,6 @@
 						});
 
 						timingsContainer.appendChild(timingBtn);
-
 					}
 				} else {
 					timingsContainer.innerHTML = '<p>Тайминги отсутствуют.</p>';
@@ -121,6 +175,7 @@
 			});
 	}
 
+
 	function finishTest() {
 		var radioButtons = document.querySelectorAll('input[type="radio"]:checked');
 		var totalTasks = document.querySelectorAll('.task').length;
@@ -131,17 +186,15 @@
 		}
 
 		if (selectedTasks < totalTasks) {
-			var confirmation = confirm('Вы ответили не на все задания. Вы уверены, что хотите завершить тест?');
-			if (!confirmation) {
-				return;  // Пользователь отменил завершение теста, ничего не делаем
-			}
+			var confirmation = confirm('Нужно ответить на все задания, чтобы завершить тест.');
+			// return;
 		}
 		var selectedAnswers = collectSelectedAnswers();
 		const urlParams = new URLSearchParams(window.location.search);
 		const packId = urlParams.get('pack_id');
 
+		checkAndSaveCorrectAnswers(packId, selectedAnswers);
 		renderVideo(packId);
-		renderVideoTimings(packId);
 		if (packId) {
 			fetch(`/api/task_answer/?pack_id=${packId}`)
 				.then(response => {
@@ -157,7 +210,7 @@
 						var finishButton = document.querySelector('.btn-endtest .btn-primary');
 						finishButton.textContent = 'Вернуться';
 						finishButton.onclick = function () {
-							window.location.href = "{% url 'home' %}";
+							window.location.href = "{% url 'landing' %}";
 						};
 						finishButton.setAttribute('type', 'button');
 					} else {
@@ -201,7 +254,7 @@
 		var incorrectTasks = [];
 
 		selectedAnswers.forEach(function (selectedAnswer) {
-			var task = tasks.find(task => task.id === parseInt(selectedAnswer.task_id));  // Находим правильный ответ по ID задания
+			var task = tasks.find(task => task.id === parseInt(selectedAnswer.task_id));
 			var correctAnswerText = task ? task.answer : '';
 
 			var row = resultsTable.insertRow();
@@ -242,22 +295,17 @@
 				return response.json();
 			})
 			.then(data => {
-				const allTasks = data.tasks_data; // Все задания, которые были в тесте
-				const selectedTaskIds = selectedAnswers.map(answer => parseInt(answer.task_id)); // ID выбранных пользователем заданий
+				const allTasks = data.tasks_data;
+				const selectedTaskIds = selectedAnswers.map(answer => parseInt(answer.task_id));
 
-				// Определяем задания, которые пользователь не отметил
 				allTasks.forEach(task => {
 					if (!selectedTaskIds.includes(task.id)) {
-						incorrectTasks.push(task.id);  // Добавляем неотмеченные задания как неправильно решенные
+						incorrectTasks.push(task.id);
 					}
 				});
-
-				// Рассчитываем процент правильно решенных задач
 				const totalTasks = allTasks.length;
 				const correctTasksCount = correctTasks.length;
-				const solvedPercent = Math.round((correctTasksCount / totalTasks) * 100);  // Процент решенных задач, округленный до целого
-
-				// Отправляем запрос на сохранение процента решенных задач
+				const solvedPercent = Math.round((correctTasksCount / totalTasks) * 100);
 				fetch('/api/solve_pack/', {
 					method: 'POST',
 					headers: {
@@ -280,9 +328,38 @@
 			});
 	}
 
+	async function checkAndSaveCorrectAnswers(packId, userAnswers) {
+		try {
+			const response = await fetch(`/api/task_answer/?pack_id=${packId}`);
+			if (!response.ok) throw new Error("Ошибка загрузки ответов");
+			const data = await response.json();
+
+			const correctAnswers = data.tasks_data.reduce((acc, task) => {
+				acc[task.id] = task.answer;
+				return acc;
+			}, {});
+
+			const correctSolvedTasks = userAnswers.filter(userTask =>
+				correctAnswers[userTask.task_id] === userTask.selectedAnswer
+			);
+
+			for (const task of correctSolvedTasks) {
+				await fetch(`/api/solve_task/`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						"X-CSRFToken": "{{ csrf_token }}",
+					},
+					body: JSON.stringify({ task_id: task.task_id })
+				});
+			}
+		} catch (error) {
+			console.error("Ошибка при обработке задач:", error);
+		}
+	}
+
 	function renderTasks(tasks) {
 		var tasksContainer = document.querySelector('.main-content-test');
-		tasksContainer.innerHTML = '';  // Очищаем контейнер
 		var index = 1;
 		// Цикл для создания элементов заданий
 		tasks.forEach(function (task) {

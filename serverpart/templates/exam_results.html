@@ -10,7 +10,8 @@
 		</div>
 	</div>
 
-	<div class="btn-endtest"> <button class="btn-primary" type="submit" onclick="window.location.href='{% url 'exams' %}'">Вернуться</button>
+	<div class="btn-endtest"> <button class="btn-primary" type="submit"
+			onclick="window.location.href='{% url 'exams' %}'">Вернуться</button>
 	</div>
 </div>
 
@@ -31,8 +32,8 @@
 						"1": data.difficulty_data.goal_math_1,
 						"2": data.difficulty_data.goal_math_2,
 						"3": data.difficulty_data.goal_analogy + data.difficulty_data.goal_addition, // Объединенная цель
-						// "4": data.difficulty_data.goal_reading,
-						"4": data.difficulty_data.goal_practical_rus
+						"4": data.difficulty_data.goal_reading,
+						"5": data.difficulty_data.goal_practical_rus
 					};
 
 					// Названия секций
@@ -40,8 +41,8 @@
 						"1": "Математика 1 часть",
 						"2": "Математика 2 часть",
 						"3": "Аналогия и дополнение предложений",
-						// "4": "Чтение и понимание текста",
-						"4": "Практическая грамматика русского языка"
+						"4": "Чтение и понимание текста",
+						"5": "Практическая грамматика русского языка"
 					};
 
 					// Контейнер для добавления шкал

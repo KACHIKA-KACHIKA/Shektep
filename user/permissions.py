@@ -6,6 +6,7 @@ from rest_framework.permissions import BasePermission
 from django.utils import timezone
 from .models import AccessRight, SubscriptionList
 
+
 class HasAccessToBlock(BasePermission):
     """
     Универсальный пермишн для проверки, есть ли у пользователя доступ к определенному типу контента.
@@ -18,7 +19,8 @@ class HasAccessToBlock(BasePermission):
 
         user = request.user
         if user.is_authenticated:
-            required_access = AccessRight.objects.filter(name=self.access_name).first()
+            required_access = AccessRight.objects.filter(
+                name=self.access_name).first()
             if not required_access:
                 return False
 
@@ -33,11 +35,18 @@ class HasAccessToBlock(BasePermission):
                     return True
         return False
 
+
 class HasAccessToVideo(HasAccessToBlock):
     access_name = "Доступ к видео"
+
 
 class HasAccessToTestResults(HasAccessToBlock):
     access_name = "Доступ к результатам"
 
+
 class HasAccessToExams(HasAccessToBlock):
     access_name = "Доступ к экзаменам"
+
+
+class HasAccessToCourse(HasAccessToBlock):
+    access_name = "Доступ к курсу"

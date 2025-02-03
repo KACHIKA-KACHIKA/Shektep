@@ -43,6 +43,8 @@ class LessonsSerializer(serializers.ModelSerializer):
 
         # Общее количество задач
         total_tasks = tasks_from_pack + tasks_from_exam
+        if obj.practice:
+            total_tasks += 15
         return total_tasks
 
     def get_solved_tasks(self, obj):

@@ -28,10 +28,10 @@
 			<table id="exam-results" style="width: 100%;">
 				<thead>
 					<tr>
-						<th class="fade-in-block bottom" style="width: 25%;">Февраль</th>
+						<th class="fade-in-block bottom" style="width: 25%;">Начальный</th>
 						<th class="fade-in-block bottom" style="width: 25%;">Март</th>
 						<th class="fade-in-block bottom" style="width: 25%;">Апрель</th>
-						<th class="fade-in-block bottom" style="width: 25%;">Май</th>
+						<th class="fade-in-block bottom" style="width: 25%;">Финальный</th>
 					</tr>
 				</thead>
 				<tbody></tbody>
@@ -168,23 +168,6 @@
 
 		examIds.forEach(examId => {
 			const scoreCell = document.createElement("td");
-
-			// if (examId === 0) {
-			// 	scoreCell.textContent = "Ждем)";
-			// } else if (solvedExams.includes(examId)) {
-			// 	scoreCell.textContent = "Решено";
-			// 	scoreCell.style.color = "#777"; // Серый цвет
-			// 	scoreCell.style.fontWeight = "bold";
-			// } else {
-			// 	const examLink = document.createElement("a");
-			// 	examLink.href = `/exams/examing/?exam_id=${examId}`;
-			// 	examLink.textContent = "0 б.";
-			// 	examLink.style.textDecoration = "none";
-			// 	examLink.style.color = "#000";
-			// 	scoreCell.appendChild(examLink);
-
-			// 	fetchExamScore(examId, examLink);
-			// }
 			if (examId === 0) {
 				scoreCell.textContent = "Ждем)";
 			} else {

@@ -1,6 +1,5 @@
 {% extends "./base.html" %}
 {% block content %}
-<!-- <div id="examTimer" class="timer"></div> -->
 <div class="main-container-test">
 	<div class="main-content-test">
 		{% csrf_token %}
@@ -82,13 +81,9 @@
 		В предложениях с пропущенными знаками препинания предполагаемое место постановки знака обозначено <u>подчёркнутым пробелом</u> или цифрой.`
 	};
 
+	const sectionDurations = { 1: 30, 2: 60, 3: 30, 4: 60, 5: 35 }; // Время в минутах
+	let timerInterval;
 	document.addEventListener('DOMContentLoaded', function () {
-		const endTime = localStorage.getItem('examEndTime');
-		if (endTime) {
-			updateTimerDisplay(); // Если таймер есть, продолжаем отсчет
-		} else {
-			startExamTimer(235); // Если таймера нет, запускаем его (например, 30 минут)
-		}
 		const urlParams = new URLSearchParams(window.location.search);
 		const examId = urlParams.get('exam_id');
 
@@ -172,6 +167,7 @@
 		modal.style.display = 'none'; // Скрываем модальное окно
 	}
 	function startSection() {
+		clearInterval(timerInterval);
 		const section = sectionIds[currentStage];
 		if (section) {
 			const tasksContainer = document.querySelector('.main-content-test');
@@ -210,10 +206,14 @@
 
 			// Начинаем поочередную загрузку
 			loadTasksSequentially();
+
+			startExamTimer(sectionDurations[currentStage]);
 		}
 	}
 
 	async function finishSection() {
+		clearInterval(timerInterval);
+		localStorage.removeItem('examEndTime');
 		var selectedAnswers = collectSelectedAnswers();
 		const packIds = sectionIds[currentStage];
 
@@ -273,8 +273,9 @@
 		localStorage.setItem('examEndTime', endTime);
 		updateTimerDisplay();
 	}
+
 	function updateTimerDisplay() {
-		const timerElement = document.getElementById('examTimer'); // Создай этот элемент в HTML
+		const timerElement = document.getElementById('examTimer'); // Добавь <div id="examTimer"></div> в HTML
 		if (!timerElement) return;
 
 		function update() {
@@ -282,17 +283,18 @@
 			const remainingTime = endTime - Date.now();
 
 			if (remainingTime <= 0) {
-				finishExam(); // Завершаем экзамен, если время истекло
+				clearInterval(timerInterval);
+				finishSection(); // Завершаем секцию, если время истекло
 			} else {
 				const minutes = Math.floor(remainingTime / 60000);
 				const seconds = Math.floor((remainingTime % 60000) / 1000);
 				timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-				setTimeout(update, 1000);
 			}
 		}
-		update();
-	}
 
+		update();
+		timerInterval = setInterval(update, 1000);
+	}
 	function collectSelectedAnswers() {
 		var selectedAnswers = [];
 		var radioButtons = document.querySelectorAll('input[type="radio"]:checked');
@@ -307,13 +309,15 @@
 	}
 
 	function finishExam() {
-		const timerElement = document.getElementById('examTimer'); // Создай этот элемент в HTML
-		if (!timerElement) return;
-		const endTime = parseInt(localStorage.getItem('examEndTime'), 10);
-		const remainingTime = endTime - Date.now();
-		if (remainingTime <= 0) {
-			alert("Время истекло! Экзамен завершен.");
-		}
+		// const timerElement = document.getElementById('examTimer'); // Создай этот элемент в HTML
+		// if (!timerElement) return;
+		// const endTime = parseInt(localStorage.getItem('examEndTime'), 10);
+		// const remainingTime = endTime - Date.now();
+		// if (remainingTime <= 0) {
+		// 	alert("Время истекло! Экзамен завершен.");
+		// }
+
+		clearInterval(timerInterval);
 		localStorage.removeItem('examEndTime');
 
 		const urlParams = new URLSearchParams(window.location.search);

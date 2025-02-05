@@ -165,7 +165,7 @@
 						timingBtn.classList.add('fade-in-block', 'bottom');
 
 						timingBtn.addEventListener('click', () => {
-							const videoElement = document.getElementById('test-video');
+							const videoElement = document.getElementById('lesson-video');
 							const [hours, minutes, seconds] = timings[label].split(':').map(Number);
 							const newTime = hours * 3600 + minutes * 60 + seconds;
 							videoElement.currentTime = newTime;

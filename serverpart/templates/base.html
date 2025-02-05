@@ -33,15 +33,15 @@
 
 			<a class="logo" href="{% url 'landing' %}">
 				<img src="/static/media/LogoNorm.png" height="40" width="32" alt="Logo">
-				<span>ШЕКТЕП</span>
+				<span id="examTimer">ШЕКТЕП</span>
 			</a>
 
 			<nav class="tabs" id="main-menu">
 				<div class="tabs-container">
+					<a class="tab" href="{% url 'home' %}"> личный кабинет</a>
 					<a class="tab" href="{% url 'tests' %}"> задания</a>
 					<a class="tab" href="{% url 'exams' %}"> экзамены</a>
 					<a class="tab" onclick="scrollToSubscription()"> подписка</a>
-					<a class="tab" onclick="scrollToMedia()"> о нас</a>
 					<div class="auth-mobile">
 						{% if user.is_authenticated %}
 						<form method="POST" action="{% url 'logout' %}">

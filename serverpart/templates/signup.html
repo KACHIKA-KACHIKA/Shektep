@@ -3,41 +3,53 @@
 {% block content %}
 <div class="acontainer">
 	<div class="data-container">
-
 		<h2>Регистрация</h2>
 		{% if error %}
 		<div class="alert alert-danger" role="alert">
 			{{ error }}
 		</div>
-
 		{% endif %}
+
 		<form id="signupForm" method="POST">
 			{% csrf_token %}
 
 			<div class="form-group">
 				<label for="username">Никнейм</label>
-				<input type="text" name="username" class="form-control" id="username" aria-describedby="usernameHelp">
+				<input type="text" name="username" class="form-control" id="username" value="{{ username|default:'' }}"
+					aria-describedby="usernameHelp">
 				<small id="usernameHelp" class="form-text text-muted">Ваш никнейм должен быть уникальным. Мы сообщим, если
 					никнейм уже занят.</small>
 			</div>
 
-			<div class="form-group"> <label for="password1">Пароль</label>
+			<div class="form-group">
+				<label for="first_name">Имя</label>
+				<input type="text" name="first_name" class="form-control" id="first_name" value="{{ first_name|default:'' }}">
+			</div>
+
+			<div class="form-group">
+				<label for="second_name">Фамилия</label>
+				<input type="text" name="second_name" class="form-control" id="second_name"
+					value="{{ second_name|default:'' }}">
+			</div>
+
+			<div class="form-group">
+				<label for="password1">Пароль</label>
 				<input type="password" name="password1" class="form-control" id="password1">
 			</div>
 
-			<div class="form-group"> <label for="password2">Повторите пароль</label>
+			<div class="form-group">
+				<label for="password2">Повторите пароль</label>
 				<input type="password" name="password2" class="form-control" id="password2">
 			</div>
 
 			<button type="submit" class="btn btn-primary">Регистрация</button>
-
 		</form>
 		<hr>
 
 		<div class="text-center"> Уже есть аккаунт?
 			<a href="{% url 'login' %}">Войдите здесь</a>
 		</div>
-
 	</div>
 </div>
+
 {% endblock %}

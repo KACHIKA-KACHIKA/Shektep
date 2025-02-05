@@ -17,7 +17,7 @@
 
 			<div class="timings-block">
 				<h1>Тайминги</h1>
-				<div id="video-timings" class="timings-container" style="width: 100%;"></div>
+				<div id="video-timings" class="timings-container" style="width: 100%; max-height: 33vh; overflow-y: auto;"></div>
 			</div>
 		</div>
 		<div id="files-section" class="materials-container">
@@ -161,21 +161,23 @@
 				if (timings && Object.keys(timings).length > 0) {
 					timingsContainer.innerHTML = ''; // Очистка контейнера перед добавлением таймингов
 
-					for (let label in timings) {
-						const timingBtn = document.createElement('button');
-						timingBtn.textContent = `${timings[label]} - ${label}`;
-						timingBtn.classList.add('timing-btn');
-						timingBtn.classList.add('fade-in-block', 'bottom');
+					for (let i = 0; i < 20; i++) {
+						for (let label in timings) {
+							const timingBtn = document.createElement('button');
+							timingBtn.textContent = `${timings[label]} - ${label}`;
+							timingBtn.classList.add('timing-btn');
+							timingBtn.classList.add('fade-in-block', 'bottom');
 
-						timingBtn.addEventListener('click', () => {
-							const videoElement = document.getElementById('lesson-video');
-							const [hours, minutes, seconds] = timings[label].split(':').map(Number);
-							const newTime = hours * 3600 + minutes * 60 + seconds;
-							videoElement.currentTime = newTime;
-							videoElement.play(); // Запуск видео после перемотки
-						});
+							timingBtn.addEventListener('click', () => {
+								const videoElement = document.getElementById('test-video');
+								const [hours, minutes, seconds] = timings[label].split(':').map(Number);
+								const newTime = hours * 3600 + minutes * 60 + seconds;
+								videoElement.currentTime = newTime;
+								videoElement.play(); // Запуск видео после перемотки
+							});
 
-						timingsContainer.appendChild(timingBtn);
+							timingsContainer.appendChild(timingBtn);
+						}
 					}
 				} else {
 					timingsContainer.innerHTML = '<p>Тайминги отсутствуют.</p>';
@@ -187,6 +189,8 @@
 				timingsContainer.innerHTML = '<p>Ошибка при загрузке таймингов.</p>';
 			});
 	}
+
+
 	function PlayAnimation() {
 		const fadeInBlocks = document.querySelectorAll('.fade-in-block');
 		function handleScroll() {

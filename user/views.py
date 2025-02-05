@@ -13,32 +13,49 @@ from django_ratelimit.decorators import ratelimit
 @ratelimit(key='ip', rate='5/m', block=True)
 def signupuser(request):
     if request.method == 'GET':
-        return render(request, './signup.html', {'form': UserCreationForm()})
+        return render(request, 'signup.html', {'form': UserCreationForm()})
     else:
-        if request.POST['password1'] == request.POST['password2']:
-            try:
-                validate_password(request.POST['password1'])
-                _user = User.objects.create_user(
-                    username=request.POST['username'],
-                    password=request.POST['password2']
-                )
-                _user.save()
-                login(request, _user)
-                return redirect('home')
-            except ValidationError as e:
-                return render(request, './signup.html', {
-                    'form': UserCreationForm(),
-                    'error': ' '.join(e.messages)
-                })
-            except IntegrityError:
-                return render(request, './signup.html', {
-                    'form': UserCreationForm(),
-                    'error': 'Этот никнейм уже занят, выберите, пожалуйста, другой.'
-                })
-        else:
-            return render(request, './signup.html', {
+        username = request.POST['username']
+        first_name = request.POST['first_name']
+        second_name = request.POST['second_name']
+        password1 = request.POST['password1']
+        password2 = request.POST['password2']
+
+        if password1 != password2:
+            return render(request, 'signup.html', {
                 'form': UserCreationForm(),
-                'error': 'Пароли не совпадают'
+                'error': 'Пароли не совпадают',
+                'username': username,
+                'first_name': first_name,
+                'second_name': second_name,
+            })
+
+        try:
+            validate_password(password1)  # Валидация пароля
+            _user = User.objects.create_user(
+                username=username,
+                password=password2,
+                first_name=first_name,
+                last_name=second_name
+            )
+            _user.save()
+            login(request, _user)
+            return redirect('home')
+        except ValidationError as e:
+            return render(request, 'signup.html', {
+                'form': UserCreationForm(),
+                'error': ' '.join(e.messages),
+                'username': username,
+                'first_name': first_name,
+                'second_name': second_name,
+            })
+        except IntegrityError:
+            return render(request, 'signup.html', {
+                'form': UserCreationForm(),
+                'error': 'Этот никнейм уже занят, выберите, пожалуйста, другой.',
+                'username': username,
+                'first_name': first_name,
+                'second_name': second_name,
             })
 
 

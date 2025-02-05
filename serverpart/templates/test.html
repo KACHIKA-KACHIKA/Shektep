@@ -129,7 +129,7 @@
 				if (error.message === '403') {
 					examsTextBlock.textContent = 'Видео-разбор доступен по подписке';
 				} else if (error.message === '404') {
-					examsTextBlock.textContent = 'Видео не найдено';
+					examsTextBlock.textContent = '';
 				} else {
 					examsTextBlock.textContent = 'Ошибка при загрузке видео. Попробуйте позже.';
 				}
@@ -144,10 +144,8 @@
 			.then(response => response.json())
 			.then(data => {
 				const timings = data.timings;
-				console.log(timings);
 				if (timings && Object.keys(timings).length > 0) {
 					timingsContainer.innerHTML = ''; // Очистка контейнера перед добавлением таймингов
-
 					for (let label in timings) {
 						const timingBtn = document.createElement('button');
 						timingBtn.textContent = `${timings[label]} - ${label}`;
@@ -186,8 +184,8 @@
 		}
 
 		if (selectedTasks < totalTasks) {
-			var confirmation = confirm('Нужно ответить на все задания, чтобы завершить тест.');
-			// return;
+			var confirmation = alert('Нужно ответить на все задания, чтобы завершить тест.');
+			return;
 		}
 		var selectedAnswers = collectSelectedAnswers();
 		const urlParams = new URLSearchParams(window.location.search);
@@ -210,7 +208,7 @@
 						var finishButton = document.querySelector('.btn-endtest .btn-primary');
 						finishButton.textContent = 'Вернуться';
 						finishButton.onclick = function () {
-							window.location.href = "{% url 'landing' %}";
+							window.location.href = "{% url 'home' %}";
 						};
 						finishButton.setAttribute('type', 'button');
 					} else {

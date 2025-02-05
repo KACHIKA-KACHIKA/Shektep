@@ -1,5 +1,6 @@
 {% extends "./base.html" %}
 {% block content %}
+<!-- <div id="examTimer" class="timer"></div> -->
 <div class="main-container-test">
 	<div class="main-content-test">
 		{% csrf_token %}
@@ -82,6 +83,12 @@
 	};
 
 	document.addEventListener('DOMContentLoaded', function () {
+		const endTime = localStorage.getItem('examEndTime');
+		if (endTime) {
+			updateTimerDisplay(); // Если таймер есть, продолжаем отсчет
+		} else {
+			startExamTimer(10); // Если таймера нет, запускаем его (например, 30 минут)
+		}
 		const urlParams = new URLSearchParams(window.location.search);
 		const examId = urlParams.get('exam_id');
 
@@ -143,8 +150,6 @@
 
 		textBlock.appendChild(imagesContainer);
 	}
-
-	// Функция для открытия модального окна
 	function openModal(imageUrl) {
 		const modal = document.getElementById('image-modal');
 		const modalImage = document.getElementById('modal-image');
@@ -162,8 +167,6 @@
 			}
 		});
 	}
-
-	// Закрытие модального окна
 	function closeModal() {
 		const modal = document.getElementById('image-modal');
 		modal.style.display = 'none'; // Скрываем модальное окно
@@ -264,7 +267,31 @@
 			console.error('Ошибка при обработке данных:', error);
 		}
 	}
+	function startExamTimer(durationInMinutes) {
+		const now = Date.now();
+		const endTime = now + durationInMinutes * 60 * 1000;
+		localStorage.setItem('examEndTime', endTime);
+		updateTimerDisplay();
+	}
+	function updateTimerDisplay() {
+		const timerElement = document.getElementById('examTimer'); // Создай этот элемент в HTML
+		if (!timerElement) return;
 
+		function update() {
+			const endTime = parseInt(localStorage.getItem('examEndTime'), 10);
+			const remainingTime = endTime - Date.now();
+
+			if (remainingTime <= 0) {
+				finishExam(); // Завершаем экзамен, если время истекло
+			} else {
+				const minutes = Math.floor(remainingTime / 60000);
+				const seconds = Math.floor((remainingTime % 60000) / 1000);
+				timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+				setTimeout(update, 1000);
+			}
+		}
+		update();
+	}
 
 	function collectSelectedAnswers() {
 		var selectedAnswers = [];
@@ -280,6 +307,15 @@
 	}
 
 	function finishExam() {
+		const timerElement = document.getElementById('examTimer'); // Создай этот элемент в HTML
+		if (!timerElement) return;
+		const endTime = parseInt(localStorage.getItem('examEndTime'), 10);
+		const remainingTime = endTime - Date.now();
+		if (remainingTime <= 0) {
+			alert("Время истекло! Экзамен завершен.");
+		}
+		localStorage.removeItem('examEndTime');
+
 		const urlParams = new URLSearchParams(window.location.search);
 		const examId = urlParams.get('exam_id');
 		const encodedResults = encodeURIComponent(JSON.stringify(sectionResults));

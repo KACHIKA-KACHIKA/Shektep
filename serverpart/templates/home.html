@@ -55,6 +55,7 @@
 
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
+		renderExamResults();
 		fetch("/api/lessons/")
 			.then(response => response.json())
 			.then(data => {
@@ -88,87 +89,118 @@
 				} else {
 					lessonsBlock.innerHTML = "<p>Уроки отсутствуют.</p>";
 				}
-				renderExamResults();
 				PlayAnimation();
 			})
 			.catch(error => console.error("Ошибка загрузки уроков:", error));
 	});
 
-	function renderExamResults() {
+	async function fetchSolvedExams() {
+		try {
+			const response = await fetch("/api/solved_exam/");
+			const data = await response.json();
+			return data.solved_exams || [];
+		} catch (error) {
+			console.error("Ошибка загрузки решенных экзаменов:", error);
+			return [];
+		}
+	}
+
+	async function fetchExamScore(examId, scoreCell) {
+		try {
+			const response = await fetch(`/api/exam/?exam_id=${examId}`);
+			const examData = await response.json();
+
+			const blockCounts = {
+				math: 0,
+				analogy: 0,
+				reading: 0,
+				grammar: 0
+			};
+
+			const packs = [
+				{ id: examData.fk_math_1_id, type: "math" },
+				{ id: examData.fk_math_2_id, type: "math" },
+				{ id: examData.fk_analogy_id, type: "analogy" },
+				{ id: examData.fk_addition_id, type: "analogy" },
+				{ id: examData.fk_practical_rus_id, type: "grammar" }
+			];
+
+			if (examData.fk_reading_id && examData.reading_block) {
+				packs.push({ id: examData.reading_block.fk_reading_1, type: "reading" });
+				packs.push({ id: examData.reading_block.fk_reading_2, type: "reading" });
+				packs.push({ id: examData.reading_block.fk_reading_3, type: "reading" });
+			}
+
+			const fetchPromises = packs
+				.filter(pack => pack.id)
+				.map(pack =>
+					fetch(`/api/solve_task/?pack_id=${pack.id}`)
+						.then(response => response.json())
+						.then(data => {
+							blockCounts[pack.type] += data.solved_tasks.length;
+						})
+						.catch(error => console.error(`Ошибка загрузки solved_tasks для pack_id=${pack.id}:`, error))
+				);
+
+			await Promise.all(fetchPromises);
+
+			const totalScore =
+				getScore(blockCounts.math, mathScoreTable) +
+				getScore(blockCounts.analogy, analogyScoreTable) +
+				getScore(blockCounts.reading, readingScoreTable) +
+				getScore(blockCounts.grammar, grammarScoreTable);
+
+			scoreCell.textContent = `${totalScore} б.`;
+		} catch (error) {
+			console.error(`Ошибка загрузки данных для экзамена ${examId}:`, error);
+		}
+	}
+
+	async function renderExamResults() {
 		const examIds = [11, 12, 0, 0]; // ID пробников
 		const tableBody = document.querySelector("#exam-results tbody");
+		tableBody.innerHTML = ""; // Очищаем таблицу перед вставкой данных
 
-		// Очищаем перед вставкой новых данных
-		tableBody.innerHTML = "";
 		const resultsRow = document.createElement("tr");
 		resultsRow.classList.add('fade-in-block', 'bottom');
 
-		examIds.forEach((examId) => {
+		const solvedExams = await fetchSolvedExams();
+
+		examIds.forEach(examId => {
 			const scoreCell = document.createElement("td");
 
-			if (examId !== 0) {
+			// if (examId === 0) {
+			// 	scoreCell.textContent = "Ждем)";
+			// } else if (solvedExams.includes(examId)) {
+			// 	scoreCell.textContent = "Решено";
+			// 	scoreCell.style.color = "#777"; // Серый цвет
+			// 	scoreCell.style.fontWeight = "bold";
+			// } else {
+			// 	const examLink = document.createElement("a");
+			// 	examLink.href = `/exams/examing/?exam_id=${examId}`;
+			// 	examLink.textContent = "0 б.";
+			// 	examLink.style.textDecoration = "none";
+			// 	examLink.style.color = "#000";
+			// 	scoreCell.appendChild(examLink);
+
+			// 	fetchExamScore(examId, examLink);
+			// }
+			if (examId === 0) {
+				scoreCell.textContent = "Ждем)";
+			} else {
 				const examLink = document.createElement("a");
-				examLink.href = `/exams/examing/?exam_id=${examId}`;
-				examLink.textContent = "0 б.";
-				examLink.style.textDecoration = "none"; // Убираем подчеркивание
-				examLink.style.color = "#000"; // Черный цвет
+				scoreCell.style.color = "#777"; // Серый цвет
+				scoreCell.style.fontWeight = "bold";
+				if (!solvedExams.includes(examId)) {
+					examLink.textContent = "0 б.";
+					examLink.style.textDecoration = "none";
+					examLink.style.color = "#000";
+					examLink.href = `/exams/examing/?exam_id=${examId}`;
+
+				}
 				scoreCell.appendChild(examLink);
 
-				fetch(`/api/exam/?exam_id=${examId}`)
-					.then(response => response.json())
-					.then(examData => {
-						const fetchPromises = [];
-						const blockCounts = {
-							math: 0,
-							analogy: 0,
-							reading: 0,
-							grammar: 0
-						};
-
-						const packs = [
-							{ id: examData.fk_math_1_id, type: "math" },
-							{ id: examData.fk_math_2_id, type: "math" },
-							{ id: examData.fk_analogy_id, type: "analogy" },
-							{ id: examData.fk_addition_id, type: "analogy" },
-							{ id: examData.fk_practical_rus_id, type: "grammar" }
-						];
-
-						if (examData.fk_reading_id && examData.reading_block) {
-							packs.push({ id: examData.reading_block.fk_reading_1, type: "reading" });
-							packs.push({ id: examData.reading_block.fk_reading_2, type: "reading" });
-							packs.push({ id: examData.reading_block.fk_reading_3, type: "reading" });
-						}
-
-						packs.forEach(pack => {
-							if (pack.id) {
-								fetchPromises.push(
-									fetch(`/api/solve_task/?pack_id=${pack.id}`)
-										.then(response => response.json())
-										.then(data => {
-											blockCounts[pack.type] += data.solved_tasks.length;
-										})
-										.catch(error => {
-											console.error(`Ошибка загрузки solved_tasks для pack_id=${pack.id}:`, error);
-										})
-								);
-							}
-						});
-
-						Promise.all(fetchPromises).then(() => {
-							const totalScore =
-								getScore(blockCounts.math, mathScoreTable) +
-								getScore(blockCounts.analogy, analogyScoreTable) +
-								getScore(blockCounts.reading, readingScoreTable) +
-								getScore(blockCounts.grammar, grammarScoreTable);
-
-							examLink.textContent = `${totalScore} б.`;
-						});
-					})
-					.catch(error => {
-						console.error(`Ошибка загрузки данных для экзамена ${examId}:`, error);
-					});
-			} else {
-				scoreCell.textContent = "Ждем)"; // Если экзамена нет, ставим прочерк
+				fetchExamScore(examId, examLink);
 			}
 
 			resultsRow.appendChild(scoreCell);
@@ -176,6 +208,7 @@
 
 		tableBody.appendChild(resultsRow);
 	}
+
 
 
 	const mathScoreTable = [

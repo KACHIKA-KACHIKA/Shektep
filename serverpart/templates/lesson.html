@@ -17,20 +17,17 @@
 
 			<div class="timings-block">
 				<h1>Тайминги</h1>
-				<div id="video-timings" class="timings-container" style="width: 100%; max-height: 33vh; overflow-y: auto;"></div>
+				<div id="video-timings" class="timings-container" style="width: 100%; max-height: 33vh; overflow-y: auto;">
+				</div>
 			</div>
 		</div>
 		<div id="files-section" class="materials-container">
 			<h1>Материалы</h1>
 			<div class="material-info">
-				<a id="practice-link" class="material-item" href="#" download><img src="/static/media/pdf.svg"
-						alt="SVG Example">Практика</a>
-				<a id="theory-link" class="material-item" href="#" download><img src="/static/media/pdf.svg"
-						alt="SVG Example">Теория</a>
-				<a id="pack-type" class="material-item" href="#"><img src="/static/media/exam-svgrepo-com.svg"
-						alt="SVG Example">Тест</a>
-				<a id="exam-type" class="material-item" href="#"><img src="/static/media/exam-svgrepo-com.svg"
-						alt="SVG Example">Спидран</a>
+				<a id="practice-link" class="material-item" style="border-color: #81c784;" href="#" download>Практика</a>
+				<a id="theory-link" class="material-item" style="border-color: #81c784;" href="#" download>Теория</a>
+				<a id="pack-type" class="material-item" href="#"> дз</a>
+				<a id="exam-type" class="material-item" href="#"> спидран</a>
 			</div>
 		</div>
 	</div>
@@ -161,24 +158,23 @@
 				if (timings && Object.keys(timings).length > 0) {
 					timingsContainer.innerHTML = ''; // Очистка контейнера перед добавлением таймингов
 
-					for (let i = 0; i < 20; i++) {
-						for (let label in timings) {
-							const timingBtn = document.createElement('button');
-							timingBtn.textContent = `${timings[label]} - ${label}`;
-							timingBtn.classList.add('timing-btn');
-							timingBtn.classList.add('fade-in-block', 'bottom');
+					for (let label in timings) {
+						const timingBtn = document.createElement('button');
+						timingBtn.textContent = `${timings[label]} - ${label}`;
+						timingBtn.classList.add('timing-btn');
+						timingBtn.classList.add('fade-in-block', 'bottom');
 
-							timingBtn.addEventListener('click', () => {
-								const videoElement = document.getElementById('test-video');
-								const [hours, minutes, seconds] = timings[label].split(':').map(Number);
-								const newTime = hours * 3600 + minutes * 60 + seconds;
-								videoElement.currentTime = newTime;
-								videoElement.play(); // Запуск видео после перемотки
-							});
+						timingBtn.addEventListener('click', () => {
+							const videoElement = document.getElementById('test-video');
+							const [hours, minutes, seconds] = timings[label].split(':').map(Number);
+							const newTime = hours * 3600 + minutes * 60 + seconds;
+							videoElement.currentTime = newTime;
+							videoElement.play(); // Запуск видео после перемотки
+						});
 
-							timingsContainer.appendChild(timingBtn);
-						}
+						timingsContainer.appendChild(timingBtn);
 					}
+
 				} else {
 					timingsContainer.innerHTML = '<p>Тайминги отсутствуют.</p>';
 				}
@@ -197,9 +193,7 @@
 			fadeInBlocks.forEach(block => {
 				const blockPosition = block.getBoundingClientRect().top;
 				const windowHeight = window.innerHeight;
-				if (blockPosition < windowHeight + 100) {
-					block.classList.add('visible');
-				}
+				block.classList.add('visible');
 			});
 		}
 		window.addEventListener('scroll', handleScroll);

@@ -162,7 +162,7 @@
 		tableBody.innerHTML = ""; // Очищаем таблицу перед вставкой данных
 
 		const resultsRow = document.createElement("tr");
-		resultsRow.classList.add('fade-in-block', 'bottom');
+		// resultsRow.classList.add('fade-in-block', 'bottom');
 
 		const solvedExams = await fetchSolvedExams();
 
@@ -231,9 +231,7 @@
 			fadeInBlocks.forEach(block => {
 				const blockPosition = block.getBoundingClientRect().top;
 				const windowHeight = window.innerHeight;
-				if (blockPosition < windowHeight + 100) {
-					block.classList.add('visible');
-				}
+				block.classList.add('visible');
 			});
 		}
 		window.addEventListener('scroll', handleScroll);

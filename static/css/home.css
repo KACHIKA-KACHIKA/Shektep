@@ -113,6 +113,7 @@
 	width: 100%;
 	border-collapse: collapse;
 	margin-top: 10px;
+	margin-bottom: 20px;
 }
 
 #exam-results th,
@@ -158,6 +159,12 @@
 	border-bottom: none;
 }
 
+@media screen and (max-width: 1359px) {
+	#exam-results th,
+	#exam-results td {
+		padding: 6px;
+	}
+}
 @media screen and (max-width: 1110px) {
 	.schedule-container {
 		width: 100%;
@@ -177,6 +184,7 @@
 	.lessons-block {
 		width: auto;
 	}
+
 }
 
 @media screen and (max-width: 881px) {}

@@ -268,12 +268,18 @@
 		}
 	}
 	function startExamTimer(durationInMinutes) {
+		let adjustedDuration = durationInMinutes;
+		console.log(document.referrer);
+		// Проверяем, был ли пользователь на /lessons/ перед этим
+		if (document.referrer.includes('/lesson')) {
+			adjustedDuration *= 0.33; // Уменьшаем время вдвое
+		}
+
 		const now = Date.now();
-		const endTime = now + durationInMinutes * 60 * 1000;
+		const endTime = now + adjustedDuration * 60 * 1000;
 		localStorage.setItem('examEndTime', endTime);
 		updateTimerDisplay();
 	}
-
 	function updateTimerDisplay() {
 		const timerElement = document.getElementById('examTimer'); // Добавь <div id="examTimer"></div> в HTML
 		if (!timerElement) return;

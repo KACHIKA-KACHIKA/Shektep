@@ -7,7 +7,8 @@
 	{% if has_course_access %}
 	<div class="schedule-container">
 		<h2>Расписание</h2>
-		<img src="/static/media/home/shedule.png" alt="Тут должно быть расписание, но что-то пошло не так(">
+		<img src="/static/media/home/shedule_march.jpg" alt="Тут должно быть расписание, но что-то пошло не так(">
+		<img src="/static/media/home/shedule_febr.jpg" alt="Тут должно быть расписание, но что-то пошло не так(">
 	</div>
 	<div class="statistics-container">
 		<h2>Статистика</h2>
@@ -217,26 +218,34 @@
 	}
 
 	function PlayAnimation() {
-		const scheduleImage = document.querySelector(".schedule-container img");
+		const scheduleImages = document.querySelectorAll(".schedule-container img");
 
-		if (scheduleImage.complete) {
-			scheduleImage.classList.add("show");
-		} else {
-			scheduleImage.addEventListener("load", () => {
-				scheduleImage.classList.add("show");
-			});
-		}
+		scheduleImages.forEach(image => {
+			if (image.complete) {
+				image.classList.add("show");
+			} else {
+				image.addEventListener("load", () => {
+					image.classList.add("show");
+				});
+			}
+		});
+
 		const fadeInBlocks = document.querySelectorAll('.fade-in-block');
 		function handleScroll() {
 			fadeInBlocks.forEach(block => {
 				const blockPosition = block.getBoundingClientRect().top;
 				const windowHeight = window.innerHeight;
-				block.classList.add('visible');
+
+				if (blockPosition < windowHeight) {
+					block.classList.add('visible');
+				}
 			});
 		}
+
 		window.addEventListener('scroll', handleScroll);
 		handleScroll();
 	}
+
 
 </script>
 

@@ -1,4 +1,3 @@
-from django.core.validators import FileExtensionValidator
 from django.db import models
 
 
@@ -11,6 +10,7 @@ class Video(models.Model):
 
     def __str__(self):
         return self.title
+
 
 class VideoTiming(models.Model):
     video = models.ForeignKey(Video, on_delete=models.CASCADE)

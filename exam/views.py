@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import *
+from .models import Exam, SolvedExam, ReadingBlock, Difficulty
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
@@ -13,12 +13,14 @@ class ExamAPI(APIView):
     def get(self, request):
         exam_id = request.GET.get('exam_id')
         if not exam_id:
-            return Response({'error': 'exam_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'exam_id is required'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         try:
             exam = Exam.objects.get(id=exam_id)
         except Exam.DoesNotExist:
-            return Response({'error': 'Exam not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Exam not found'},
+                            status=status.HTTP_404_NOT_FOUND)
 
         exam_data = {
             'id': exam.id,
@@ -32,7 +34,6 @@ class ExamAPI(APIView):
             'created_at': exam.created_at,
         }
 
-        # Если fk_reading_id существует, добавляем связанные данные о чтении
         if exam.fk_reading_id:
             reading_block = ReadingBlock.objects.filter(
                 id=exam.fk_reading_id).first()
@@ -53,10 +54,12 @@ class SolvedExamAPI(APIView):
         try:
             exams = SolvedExam.objects.filter(user=request.user)
         except SolvedExam.DoesNotExist:
-            return Response({'error': 'Exam not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Exam not found'},
+                            status=status.HTTP_404_NOT_FOUND)
 
         solved_exams = exams.values_list('exam_id', flat=True)
-        return Response({"solved_exams": solved_exams}, status=status.HTTP_200_OK)
+        return Response({"solved_exams": solved_exams},
+                        status=status.HTTP_200_OK)
 
 
 class CorrectExamAPI(APIView):
@@ -67,7 +70,8 @@ class CorrectExamAPI(APIView):
         exam_id = request.data.get('exam_id')
 
         if not exam_id:
-            return Response({"error": "exam_id not provided"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "exam_id not provided"},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         try:
             exam = Exam.objects.get(pk=exam_id)
@@ -75,33 +79,41 @@ class CorrectExamAPI(APIView):
                 user=user, exam=exam)
 
             if created:
-                return Response({"success": "Exam marked as solved"}, status=status.HTTP_201_CREATED)
+                return Response({"success": "Exam marked as solved"},
+                                status=status.HTTP_201_CREATED)
             else:
-                return Response({"info": "Exam already marked as solved"}, status=status.HTTP_200_OK)
+                return Response({"info": "Exam already marked as solved"},
+                                status=status.HTTP_200_OK)
 
         except Exam.DoesNotExist:
-            return Response({"error": "Invalid exam_id"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Invalid exam_id"},
+                            status=status.HTTP_404_NOT_FOUND)
 
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"error": str(e)},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def delete(self, request):
         user = request.user
         exam_id = request.data.get('exam_id')
 
         if not exam_id:
-            return Response({"error": "exam_id not provided"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "exam_id not provided"},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         try:
             solved_exam = SolvedExam.objects.get(user=user, exam__id=exam_id)
             solved_exam.delete()
-            return Response({"success": "Solved exam deleted"}, status=status.HTTP_204_NO_CONTENT)
+            return Response({"success": "Solved exam deleted"},
+                            status=status.HTTP_204_NO_CONTENT)
 
         except SolvedExam.DoesNotExist:
-            return Response({"error": "Solved exam not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Solved exam not found"},
+                            status=status.HTTP_404_NOT_FOUND)
 
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"error": str(e)},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class DifficultyAPI(APIView):
@@ -110,7 +122,8 @@ class DifficultyAPI(APIView):
     def get(self, request):
         exam_id = request.GET.get('exam_id')
         if not exam_id:
-            return Response({'error': 'exam_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'exam_id is required'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         try:
             difficulty_id = Exam.objects.filter(pk=exam_id).values(
@@ -118,7 +131,8 @@ class DifficultyAPI(APIView):
             exam_difficulty = Difficulty.objects.filter(
                 pk=difficulty_id).values().first()
         except (Exam.DoesNotExist, KeyError, IndexError):
-            return Response({'error': 'Difficulty data not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Difficulty data not found'},
+                            status=status.HTTP_404_NOT_FOUND)
 
         difficulty_data = {
             "goal_math_1": exam_difficulty['goal_math_1'],
@@ -128,7 +142,8 @@ class DifficultyAPI(APIView):
             "goal_reading": exam_difficulty['goal_reading'],
             "goal_practical_rus": exam_difficulty['goal_practical_rus'],
         }
-        return Response({'difficulty_data': difficulty_data}, status=status.HTTP_200_OK)
+        return Response({'difficulty_data': difficulty_data},
+                        status=status.HTTP_200_OK)
 
 
 class ExamsAPI(APIView):
@@ -139,7 +154,8 @@ class ExamsAPI(APIView):
             'id', 'difficulty_id', 'name', 'created_at')
 
         if not exams.exists():
-            return Response({'error': 'No exams available at the moment'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'No exams available at the moment'},
+                            status=status.HTTP_404_NOT_FOUND)
 
         return Response({'exams': exams}, status=status.HTTP_200_OK)
 

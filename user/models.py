@@ -16,21 +16,22 @@ class Lesson(models.Model):
         Exam, on_delete=models.SET_NULL, null=True, blank=True)  # Спидран
     practice = models.FileField(upload_to="practices/", null=True, blank=True)
     theory = models.FileField(upload_to="theories/", null=True, blank=True)
-    upload_date = models.DateField(null=True, blank=True)  
+    upload_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return f"Урок {self.title}"
+
 
 class UserLessonProgress(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
 
     video_rating = models.PositiveIntegerField(
-        null=True, blank=True)  # Оценка видео (например, 1-5)
+        null=True, blank=True)
 
     downloaded_practice = models.BooleanField(
-        default=False)  # Скачал практический материал
-    downloaded_theory = models.BooleanField(default=False)  # Скачал теорию
+        default=False)
+    downloaded_theory = models.BooleanField(default=False)
 
 
 class AccessRight(models.Model):
@@ -46,7 +47,7 @@ class Subscription(models.Model):
     duration = models.DurationField()
     price = models.DecimalField(max_digits=6, decimal_places=2)
     access_rights = models.ManyToManyField(
-        AccessRight, blank=True)  # Подписка включает доступы
+        AccessRight, blank=True)
 
     def __str__(self):
         return f"{self.type_name} - {self.price} за {self.duration.days} дней"
@@ -62,4 +63,5 @@ class SubscriptionList(models.Model):
         return self.timestamp + self.subscription.duration
 
     def __str__(self):
-        return f"{self.user.username} - {self.subscription.type_name}, до {self.end_date}"
+        return f"{self.user.username} - {self.subscription.type_name},\
+                      до {self.end_date}"

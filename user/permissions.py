@@ -1,16 +1,10 @@
 from django.utils import timezone
 from rest_framework.permissions import BasePermission
-from .models import *
-
-from rest_framework.permissions import BasePermission
-from django.utils import timezone
+from django.db import models
 from .models import AccessRight, SubscriptionList
 
 
 class HasAccessToBlock(BasePermission):
-    """
-    Универсальный пермишн для проверки, есть ли у пользователя доступ к определенному типу контента.
-    """
     access_name = None
 
     def has_permission(self, request, view):
@@ -27,7 +21,8 @@ class HasAccessToBlock(BasePermission):
             active_subscriptions = SubscriptionList.objects.filter(
                 user=user,
                 timestamp__lte=timezone.now(),
-                timestamp__gte=timezone.now() - models.F('subscription__duration')
+                timestamp__gte=timezone.now()
+                - models.F('subscription__duration')
             )
 
             for sub in active_subscriptions:

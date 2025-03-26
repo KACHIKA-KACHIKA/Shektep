@@ -52,7 +52,7 @@ def signupuser(request):
         except IntegrityError:
             return render(request, 'signup.html', {
                 'form': UserCreationForm(),
-                'error': 'Этот никнейм уже занят, выберите, пожалуйста, другой.',
+                'error': 'Этот никнейм занят, выберите, пожалуйста, другой',
                 'username': username,
                 'first_name': first_name,
                 'second_name': second_name,
@@ -70,9 +70,12 @@ def loginuser(request):
         return render(request, './login.html', {'form': AuthenticationForm()})
     else:
         user = authenticate(
-            request, username=request.POST['username'], password=request.POST['password'])
+            request, username=request.POST['username'],
+            password=request.POST['password'])
         if user is None:
-            return render(request, './login.html', {'form': AuthenticationForm(), 'error': 'Никнейм и пароль не сходятся'})
+            return render(request, './login.html',
+                          {'form': AuthenticationForm(),
+                           'error': 'Никнейм и пароль не сходятся'})
         else:
             login(request, user)
             return redirect('home')

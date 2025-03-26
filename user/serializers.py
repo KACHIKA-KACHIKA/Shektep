@@ -5,7 +5,7 @@ from serverpart.models import Task, SolvedTasks
 
 class LessonsSerializer(serializers.ModelSerializer):
     upload_date = serializers.DateField(
-        format="%d.%m")  # Форматируем дату
+        format="%d.%m")
     total_tasks = serializers.SerializerMethodField()
     solved_tasks = serializers.SerializerMethodField()
 
@@ -14,12 +14,10 @@ class LessonsSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'upload_date', 'total_tasks', 'solved_tasks']
 
     def get_total_tasks(self, obj):
-        # Считаем задачи из паков, привязанных к уроку
         tasks_from_pack = 0
-        if obj.pack:  # Проверяем, есть ли привязанный pack
+        if obj.pack:
             tasks_from_pack = Task.objects.filter(pack_id=obj.pack).count()
 
-        # Считаем задачи из экзаменов, привязанных к уроку
         tasks_from_exam = 0
         if obj.exam:
             exam_packs = [
@@ -29,9 +27,8 @@ class LessonsSerializer(serializers.ModelSerializer):
             tasks_from_exam = sum([Task.objects.filter(
                 pack_id=pack).count() for pack in exam_packs if pack])
 
-            # Считаем задачи из блоков чтения
             tasks_from_reading_block = 0
-            if obj.exam.fk_reading:  # Проверяем, есть ли блок чтения
+            if obj.exam.fk_reading:
                 reading_packs = [
                     obj.exam.fk_reading.fk_reading_1,
                     obj.exam.fk_reading.fk_reading_2,
@@ -41,14 +38,13 @@ class LessonsSerializer(serializers.ModelSerializer):
                     pack_id=pack).count() for pack in reading_packs if pack])
             tasks_from_exam += tasks_from_reading_block
 
-        # Общее количество задач
         total_tasks = tasks_from_pack + tasks_from_exam
         if obj.practice:
             total_tasks += 15
         return total_tasks
 
     def get_solved_tasks(self, obj):
-        request = self.context.get('request')  # Безопасное получение request
+        request = self.context.get('request')
         if not request or not request.user.is_authenticated:
             return 0
 

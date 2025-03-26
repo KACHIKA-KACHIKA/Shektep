@@ -1,6 +1,5 @@
 from django.urls import path
-from .views import *
-from rest_framework.routers import DefaultRouter
+from .views import test, test_creation_page
 
 urlpatterns = [
     path('', test_creation_page, name='tests'),

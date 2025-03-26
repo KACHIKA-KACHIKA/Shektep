@@ -3,10 +3,13 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-from exam.views import *
-from user.views import *
-from serverpart.views import *
-from videoplayer.views import *
+from exam.views import (ExamAPI, ExamsAPI, SolvedExamAPI,
+                        DifficultyAPI, ReadingBlockAPI, CorrectExamAPI)
+from serverpart.views import (TaskAPI, PackAPI, SubsectionAPI, CorrectTaskAPI, TaskAnswerAPI,
+                              SolvePackAPI, LessonsAPIView, LessonDetailAPIView, UserLessonProgressView,
+                              landing, home, lesson)
+from videoplayer.views import VideoDetailAPIView, VideoTimingAPIView
+
 urlpatterns = [
     path('api/subsection/', SubsectionAPI.as_view(), name="subsection"),
     path('api/pack/', PackAPI.as_view(), name="pack"),
@@ -18,7 +21,8 @@ urlpatterns = [
 
     path('api/exam/', ExamAPI.as_view(), name='exam'),
     path('api/difficulty/', DifficultyAPI.as_view(), name='difficulty'),
-    path('api/reading_block/', ReadingBlockAPI.as_view(), name='reading_block'),
+    path('api/reading_block/',
+         ReadingBlockAPI.as_view(), name='reading_block'),
 
     # Записать результат решенного экзамена
     path('api/solve_exam/', CorrectExamAPI.as_view(), name='solve_exam'),
@@ -28,10 +32,11 @@ urlpatterns = [
     path('api/solve_pack/', SolvePackAPI.as_view(),
          name='solve_pack'),  # Записать результат теста
     path('api/solve_task/', CorrectTaskAPI.as_view(),
-         name='solve_task'),  # записать правильное задание
-         
+         name='solve_task'),  # Записать правильное задание
+
     path('api/video/', VideoDetailAPIView.as_view(), name='video-detail'),
-    path('api/video_timing/', VideoTimingAPIView.as_view(), name='video-timings'),
+    path('api/video_timing/',
+         VideoTimingAPIView.as_view(), name='video-timings'),
 
     path('api/lesson/', LessonDetailAPIView.as_view(), name='lesson'),
     path('api/lessons/', LessonsAPIView.as_view(), name='lessons'),

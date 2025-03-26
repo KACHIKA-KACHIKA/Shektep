@@ -14,7 +14,8 @@ class TaskAPI(APIView):
     def get(self, request):
         pack_id = request.GET.get('pack_id')
         if not pack_id:
-            return Response({'error': 'pack_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'pack_id is required'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         try:
             pack = Pack.objects.get(id=pack_id)
@@ -47,7 +48,8 @@ class TaskAPI(APIView):
             }, status=status.HTTP_200_OK)
 
         except Pack.DoesNotExist:
-            return Response({'error': 'Pack not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Pack not found'},
+                            status=status.HTTP_404_NOT_FOUND)
 
 
 class PackAPI(APIView):
@@ -81,7 +83,8 @@ class SolvePackAPI(APIView):
         solved_percent = request.data.get('solved_percent')
 
         if not pack_id or solved_percent is None:
-            return Response({"error": "Необходимо указать pack_id и solved_percent."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Нужен pack_id и solved_percent."},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         pack = get_object_or_404(Pack, id=pack_id)
 
@@ -95,7 +98,8 @@ class SolvePackAPI(APIView):
             solved_pack.percent = solved_percent
             solved_pack.save()
 
-        return Response({"message": "Процент решенных задач успешно сохранен."}, status=status.HTTP_200_OK)
+        return Response({"message": "Процент решенных задач сохранен."},
+                        status=status.HTTP_200_OK)
 
 
 class TaskAnswerAPI(APIView):
@@ -105,12 +109,15 @@ class TaskAnswerAPI(APIView):
             try:
                 tasks_data = Task.objects.filter(
                     pack_id=pack_id).values('id', 'answer')
-                return Response({'tasks_data': list(tasks_data)}, status=status.HTTP_200_OK)
+                return Response({'tasks_data': list(tasks_data)},
+                                status=status.HTTP_200_OK)
 
             except Pack.DoesNotExist:
-                return Response({'error': 'Pack not found'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'error': 'Pack not found'},
+                                status=status.HTTP_404_NOT_FOUND)
 
-        return Response({'error': 'pack_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'pack_id is required'},
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 class SubsectionAPI(APIView):
@@ -125,6 +132,7 @@ class SubsectionAPI(APIView):
 
 class LessonsAPIView(APIView):
     permission_classes = [HasAccessToCourse]
+
     def get(self, request):
         lessons = Lesson.objects.filter(is_published=True).order_by(
             '-upload_date')  # Сортируем по дате
@@ -135,6 +143,7 @@ class LessonsAPIView(APIView):
 
 class LessonDetailAPIView(APIView):
     permission_classes = [HasAccessToCourse]
+
     def get(self, request):
         lesson_id = request.GET.get("lesson_id")
 
@@ -165,7 +174,8 @@ class UserLessonProgressView(APIView):
         field = request.data.get('field')
         value = request.data.get('value')
         if not user_id or not lesson_id or not field or value is None:
-            return Response({'error': 'Некорректные данные'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Некорректные данные'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         # Ищем существующую запись или создаем новую
         progress, created = UserLessonProgress.objects.update_or_create(
@@ -179,7 +189,8 @@ class UserLessonProgressView(APIView):
 
 def lesson(request):
     permission_instance = HasAccessToCourse()  # Создаем экземпляр класса
-    has_access = permission_instance.has_permission(request, view=None)  # Передаем None для view
+    has_access = permission_instance.has_permission(
+        request, view=None)  # Передаем None для view
     return render(request, 'lesson.html', {'has_course_access': has_access})
 
 
@@ -189,7 +200,8 @@ def landing(request):
 
 def home(request):
     permission_instance = HasAccessToCourse()  # Создаем экземпляр класса
-    has_access = permission_instance.has_permission(request, view=None)  # Передаем None для view
+    has_access = permission_instance.has_permission(
+        request, view=None)  # Передаем None для view
     return render(request, 'home.html', {'has_course_access': has_access})
 
 
@@ -200,7 +212,8 @@ def test(request):
 def test_creation_page(request):
     sections = Section.objects.all()
     subsections = Subsection.objects.all()
-    return render(request, 'testcreation.html', {'sections': sections, 'subsections': subsections})
+    return render(request, 'testcreation.html',
+                  {'sections': sections, 'subsections': subsections})
 
 
 # Don't use
@@ -212,19 +225,22 @@ class CorrectTaskAPI(APIView):
         pack_id = request.query_params.get('pack_id')
 
         if not pack_id:
-            return Response({"error": "pack_id not provided"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "pack_id not provided"},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         solved_tasks = SolvedTasks.objects.filter(
             user=user, task__pack_id=pack_id).values_list('task_id', flat=True)
 
-        return Response({"solved_tasks": list(solved_tasks)}, status=status.HTTP_200_OK)
+        return Response({"solved_tasks": list(solved_tasks)},
+                        status=status.HTTP_200_OK)
 
     def post(self, request):
         user = request.user
         task_id = request.data.get('task_id')
 
         if not task_id:
-            return Response({"error": "task_id not provided"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "task_id not provided"},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         try:
             task = Task.objects.get(pk=task_id)
@@ -232,28 +248,35 @@ class CorrectTaskAPI(APIView):
                 user=user, task=task)
 
             if created:
-                return Response({"success": "Task marked as solved"}, status=status.HTTP_201_CREATED)
+                return Response({"success": "Task marked as solved"},
+                                status=status.HTTP_201_CREATED)
             else:
-                return Response({"info": "Task already marked as solved"}, status=status.HTTP_200_OK)
+                return Response({"info": "Task already marked as solved"},
+                                status=status.HTTP_200_OK)
 
         except Task.DoesNotExist:
-            return Response({"error": "Invalid task_id"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Invalid task_id"},
+                            status=status.HTTP_404_NOT_FOUND)
 
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"error": str(e)},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def delete(self, request):
         user = request.user
         task_id = request.data.get('task_id')
 
         if not task_id:
-            return Response({"error": "task_id not provided"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "task_id not provided"},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         solved_task = SolvedTasks.objects.filter(
             user=user, task__id=task_id).first()
 
         if not solved_task:
-            return Response({"success": "Solved task already deleted or never existed"}, status=status.HTTP_204_NO_CONTENT)
+            return Response({"success": "Task doesn't existed"},
+                            status=status.HTTP_204_NO_CONTENT)
 
         solved_task.delete()
-        return Response({"success": "Solved task deleted"}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"success": "Solved task deleted"},
+                        status=status.HTTP_204_NO_CONTENT)

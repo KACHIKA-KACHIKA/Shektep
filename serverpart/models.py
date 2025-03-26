@@ -26,8 +26,9 @@ class Subsection(models.Model):
 class Pack(models.Model):
     subsection = models.ForeignKey(Subsection, on_delete=models.CASCADE)
     is_published = models.BooleanField(default=True)
+    # Закоментить перед первой миграцией
     video = models.ForeignKey(Video, on_delete=models.SET_NULL, null=True,
-                              blank=True, related_name='pack_video')  # Закоментить перед первой миграцией
+                              blank=True, related_name='pack_video')
 
     def __str__(self):
         return f"Pack: {self.subsection} № {self.id}"
@@ -52,7 +53,9 @@ class Task(models.Model):
 
     def task_image_preview(self):
         if self.task_image:
-            return mark_safe(f'<img src="{self.task_image.url}" width="376" height="120" />')
+            return mark_safe(
+                f'< img src="{self.task_image.url}" \
+                width="376" height="120" / >')
         return "(No image)"
 
     task_image_preview.short_description = "Task Image Preview"
@@ -69,7 +72,8 @@ def delete_task_images(sender, instance, **kwargs):
 
 class ReadingImage(models.Model):
     pack = models.ForeignKey(Pack, on_delete=models.CASCADE,
-                             related_name='reading_images', null=True, blank=True)
+                             related_name='reading_images',
+                             null=True, blank=True)
     image = models.ImageField(upload_to='reading_texts/')
 
 
@@ -91,7 +95,8 @@ class SolvedPacks(models.Model):
     percent = models.PositiveIntegerField(default=0)
 
     def __str__(self):
-        return f"Пользователь {self.user.username} решил тест {self.pack.pk} на {self.percent}%"
+        return f"Пользователь {self.user.username} \
+                      решил тест {self.pack.pk} на {self.percent}%"
 
     class Meta:
         verbose_name = 'SolvedPacks'

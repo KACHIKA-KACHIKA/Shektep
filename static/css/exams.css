@@ -21,7 +21,6 @@
 	justify-content: space-evenly;
 	flex-wrap: wrap;
 
-	/* padding-top: 12px; */
 	width: 100%;
 }
 
@@ -61,7 +60,6 @@
 .btn-exam:disabled:hover {
 	background-color: #ccc;
 	cursor: not-allowed;
-	/* Меняет курсор на запрещающий */
 	color: inherit;
 }
 
@@ -75,18 +73,13 @@
 
 #finishExamButton {
 	border-color: red;
-	/* Начальный цвет границы */
 	transition: border-color 0.3s ease;
-	/* Плавный переход */
 }
 
 #finishExamButton:hover {
 	border-color: darkred;
-	/* Цвет границы при наведении */
 	background-color: rgba(255, 0, 0, 0.2);
-	/* Легкий красный фон при наведении (по желанию) */
 	cursor: pointer;
-	/* Меняет курсор на указатель */
 }
 
 .notification {
@@ -98,6 +91,7 @@
 		font-size: 24px;
 	}
 }
+
 @media screen and (max-width: 400px) {
 	.tests-textblock {
 		font-size: 20px;

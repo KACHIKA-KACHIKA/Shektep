@@ -1,6 +1,5 @@
-/* Стиль для модального окна */
 .image-modal {
-	display: none; /* По умолчанию окно скрыто */
+	display: none;
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -9,18 +8,16 @@
 	background-color: rgba(0, 0, 0, 0.7);
 	justify-content: center;
 	align-items: center;
-	z-index: 1000; /* Должно быть поверх контента */
+	z-index: 1000;
 }
 
-/* Стиль для изображения в модальном окне */
 .modal-image {
 	max-width: 90%;
 	max-height: 90%;
-	object-fit: contain; /* Сохраняем пропорции */
+	object-fit: contain;
 	border-radius: 10px;
 }
 
-/* Кнопка для закрытия модального окна */
 .close-modal {
 	position: absolute;
 	top: 20px;

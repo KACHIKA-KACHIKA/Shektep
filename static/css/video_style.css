@@ -16,7 +16,7 @@
 .timings-container {
 	display: flex;
 	flex-direction: column;
-	gap:10px;
+	gap: 10px;
 	width: 50%;
 	margin-bottom: 24px;
 }
@@ -35,9 +35,6 @@
 	font-size: 18px;
 }
 
-/* .timing-btn:hover {
-	background-color: #7BBAF4;
-} */
 @media screen and (max-width: 1020px) {
 	#test-video {
 		width: 95%;

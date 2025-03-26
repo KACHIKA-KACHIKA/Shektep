@@ -14,16 +14,16 @@
 
 .reading-text-container {
 	display: flex;
-	flex-wrap: wrap; /* Перенос строк */
-	gap: 10px; /* Отступы между изображениями */
+	flex-wrap: wrap;
+	gap: 10px;
 	justify-content: center;
 }
 
 .reading-text-image {
-	width: calc(50% - 10px); /* 2 изображения в ряд */
+	width: calc(50% - 10px);
 	max-width: 100%;
 	height: auto;
-	object-fit: contain; /* Подгоняем изображение */
+	object-fit: contain;
 	border-radius: 5px;
 }
 
@@ -36,10 +36,6 @@
 	width: 100%;
 	height: auto;
 }
-/* 
-img {
-	width: 100%;
-} */
 
 .task-options {
 	align-items: center;
@@ -51,7 +47,6 @@ img {
 	display: none;
 }
 
-/* Стили для анимации появления и скрытия решения */
 .solution-image.show {
 	display: block;
 	animation: fadeIn 0.2s ease-in-out;
@@ -61,8 +56,6 @@ img {
 	width: 100%;
 	display: flex;
 	justify-content: space-between;
-	/* margin-top: 10px;
-	margin-bottom: 10px; */
 	flex-direction: row-reverse;
 }
 
@@ -88,11 +81,9 @@ input[type="radio"] {
 	border: 1px solid #000000;
 	background-color: white;
 	-webkit-appearance: none;
-	/*to disable the default appearance of radio button*/
 }
 
 input[type="radio"]:checked {
-	/*no need, if you don't disable default appearance*/
 	background-color: #7BBAF4;
 }
 
@@ -128,7 +119,6 @@ label span {
 	justify-content: center;
 
 	margin-bottom: 24px;
-	/* margin-top: 24px; */
 	margin-left: auto;
 	margin-right: auto;
 }
@@ -144,7 +134,6 @@ label span {
 	}
 }
 
-@media screen and (max-width: 1600px) {}
 
 @media screen and (max-width: 1020px) {
 	.main-content-test {
@@ -168,9 +157,3 @@ label span {
 		margin: 3px;
 	}
 }
-
-@media screen and (max-width: 881px) {}
-
-@media screen and (max-width: 820px) {}
-
-@media screen and (max-width: 620px) {}

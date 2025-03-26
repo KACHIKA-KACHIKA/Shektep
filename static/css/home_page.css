@@ -18,9 +18,7 @@
 .section-block {
 	display: flex;
 	justify-content: center;
-
 	width: 100%;
-	/* background-color: #ffffff; */
 }
 
 .banner-block {
@@ -31,7 +29,6 @@
 
 .banner-block-text {
 	width: 50%;
-	/* white-space: nowrap; */
 }
 
 .banner-block-text h2 {
@@ -43,6 +40,7 @@
 	margin-top: 5px;
 	font-size: 20px;
 }
+
 .banner-photo {
 	display: none;
 }
@@ -90,14 +88,12 @@
 	font-size: 24px;
 	text-decoration: none;
 	gap: 24px;
-	/* Отступы между элементами */
 }
 
 .motivate-text-step {
 	color: #000000;
 	display: flex;
 	width: calc(50% - 12px);
-	/* Задаём ширину для двух колонок с отступами */
 	margin-top: 24px;
 
 	text-decoration: none;
@@ -110,7 +106,6 @@
 
 	padding: 40px 40px;
 	box-sizing: border-box;
-	/* Для правильных отступов */
 }
 
 .subscriprion-block {
@@ -145,6 +140,7 @@
 	font-size: 18px;
 	color: #333333;
 }
+
 .item-description img {
 	width: 100%;
 }
@@ -210,13 +206,10 @@
 	font-size: 30px;
 }
 
-footer {
-	/* align-self: flex-end; */
-}
 
 @media screen and (max-width: 2000px) {
 	.banner-photo {
-    height: 22vw;
+		height: 22vw;
 	}
 }
 
@@ -227,17 +220,19 @@ footer {
 }
 
 @media screen and (max-width: 1100px) {
-	.banner-block{
+	.banner-block {
 		width: 100%;
 	}
+
 	.banner-block-text {
 		width: 45%;
 	}
+
 	.banner-block-text h2 {
 		font-size: 30px;
 		margin-bottom: 0px;
 	}
-	
+
 	.banner-block-text p {
 		margin-top: 5px;
 		font-size: 20px;
@@ -259,17 +254,14 @@ footer {
 		margin-right: 20px;
 		width: 100%;
 	}
-	
+
 	.banner-photo {
 		height: 320px;
 	}
 }
 
-/* Здесь уже мобилка */
-
-
 @media screen and (max-width: 910px) {
-	
+
 	.banner-block-text h2 {
 		margin-top: 10px;
 	}
@@ -289,9 +281,11 @@ footer {
 	.banner-block-text {
 		width: 100%;
 	}
+
 	.banner-photo img {
-    height: 100%;
+		height: 100%;
 	}
+
 	.banner-block {
 		flex-direction: column;
 		align-items: center;

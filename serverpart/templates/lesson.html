@@ -102,50 +102,71 @@
 			.catch(error => console.error('Error updating progress', error));
 	}
 
-	function updateLessonMaterials(data) {
+	function updateLessonMaterials(lesson_data) {
 		const practiceLink = document.getElementById("practice-link");
 		const theoryLink = document.getElementById("theory-link");
 		const packType = document.getElementById("pack-type");
 		const examType = document.getElementById("exam-type");
 
-		if (data.video_url) {
+		if (lesson_data.video_url) {
 			const videoContainer = document.querySelector('.lesson-video-container');
 			videoContainer.style.display = 'flex';
 			const videoTitle = document.querySelector('.video-block h1');
-			videoTitle.textContent = data.title || "Название ролика";
+			videoTitle.textContent = lesson_data.title || "Название ролика";
 			const videoElement = document.getElementById('lesson-video');
 			const videoSource = document.getElementById('video-source');
-			videoSource.src = data.video_url;
+			videoSource.src = lesson_data.video_url;
 			videoElement.load();
-			renderVideoTimings(data.video_id);
+			renderVideoTimings(lesson_data.video_id);
 		}
 
-		if (data.practice_url) {
-			practiceLink.href = data.practice_url;
+		if (lesson_data.practice_url) {
+			practiceLink.href = lesson_data.practice_url;
 			practiceLink.style.display = "flex";
 		} else {
 			practiceLink.style.display = "none";
 		}
 
-		if (data.theory_url) {
-			theoryLink.href = data.theory_url;
+		if (lesson_data.theory_url) {
+			theoryLink.href = lesson_data.theory_url;
 			theoryLink.style.display = "flex";
 		} else {
 			theoryLink.style.display = "none";
 		}
 
-		if (data.pack) {
-			packType.href = `/tests/test/?pack_id=${data.pack}`;
+		if (lesson_data.pack) {
+			fetch(`/api/solve_pack/?pack_id=${lesson_data.pack}`)
+				.then(response => response.json())
+				.then(data => {
+					let solvedPercent = data.percent || 0;
+					let fillDiv = packType.querySelector('.fill');
+					if (!fillDiv) {
+						fillDiv = document.createElement('div');
+						fillDiv.classList.add('fill');
+						packType.appendChild(fillDiv);
+					}
+					setTimeout(() => {
+						fillDiv.style.width = solvedPercent + '%';
+					}, 100);
+				})
+				.catch(error => console.error("Ошибка загрузки урока:", error));
+			packType.href = `/tests/test/?pack_id=${lesson_data.pack}`;
 			packType.style.display = "flex";
 		} else {
 			packType.style.display = "none";
 		}
 
-		if (data.exam) {
-			examType.href = `/exams/examing/?exam_id=${data.exam}`;
+		if (lesson_data.exam) {
+			examType.href = `/exams/examing/?exam_id=${lesson_data.exam}`;
 			examType.style.display = "flex";
 		} else {
 			examType.style.display = "none";
+		}
+		const filesSection = document.getElementById("files-section");
+		const materialInfo = document.querySelector(".material-info");
+
+		if (!materialInfo.querySelector(".material-item[style*='display: flex']")) {
+			filesSection.remove();
 		}
 	}
 	function renderVideoTimings(videoId) {

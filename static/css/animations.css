@@ -1,12 +1,12 @@
 .fade-in {
-	opacity: 0; /* Изначально элементы невидимы */
-	transform: translateY(20px); /* Легкий сдвиг вниз */
-	transition: opacity 0.6s ease, transform 0.6s ease; /* Анимация */
+	opacity: 0;
+	transform: translateY(20px);
+	transition: opacity 0.6s ease, transform 0.6s ease;
 }
 
 .fade-in.visible {
-	opacity: 1; /* Делаем элемент видимым */
-	transform: translateY(0); /* Возвращаем элемент на место */
+	opacity: 1;
+	transform: translateY(0);
 }
 
 .fade-in-block {

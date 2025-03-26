@@ -1,8 +1,6 @@
 .section-banner-container {
 	display: flex;
 	flex-wrap: wrap;
-	/* height: 100%; */
-	/* margin: auto; */
 	padding-top: 20px;
 	justify-content: space-evenly;
 	text-align: center;

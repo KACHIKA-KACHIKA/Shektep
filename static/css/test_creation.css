@@ -1,7 +1,6 @@
 .section-container {
 	display: flex;
 	flex-wrap: wrap;
-	/* margin: auto; */
 	padding-top: 20px;
 	justify-content: space-evenly;
 	text-align: center;
@@ -9,7 +8,6 @@
 
 .section-head {
 	font-family: "ALS Sector";
-	/* font-weight: bold; */
 	font-size: 30px;
 	text-decoration: none;
 }
@@ -96,9 +94,9 @@
 	font-size: 21px;
 	text-decoration: none;
 	background-color: #ffffff;
-	opacity: 0; /* Изначально кнопки невидимы */
-	transform: translateY(20px); /* Сдвиг по вертикали */
-	transition: opacity 0.5s ease, transform 0.5s ease; /* Анимация появления */
+	opacity: 0;
+	transform: translateY(20px);
+	transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
 .btn-pack .fill {
@@ -107,21 +105,19 @@
 	left: 0;
 	height: 100%;
 	width: 0;
-	/* Начальная ширина 0% */
 	background-color: #4caf50;
 	z-index: 0;
-	/* Отправляем элемент заполнения на задний план */
 	transition: width 1s ease;
-	/* Анимация ширины */
 }
+
 .btn-pack.visible {
-	opacity: 1; /* Видимые кнопки */
-	transform: translateY(0); /* Возвращаем в начальное положение */
+	opacity: 1;
+	transform: translateY(0);
 }
+
 .btn-pack span {
 	position: relative;
 	z-index: 1;
-	/* Текст отображается поверх фона */
 }
 
 .btn-pack:hover {
@@ -162,8 +158,6 @@
 	margin: auto;
 	padding-top: 20px;
 	width: 100%;
-	/* margin-bottom: 20px; */
-	/* display: none; */
 }
 
 

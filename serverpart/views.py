@@ -77,6 +77,21 @@ class PackAPI(APIView):
 class SolvePackAPI(APIView):
     permission_classes = [HasAccessToTestResults]
 
+    def get(self, request):
+        pack_id = request.GET.get('pack_id')
+        if pack_id:
+            try:
+                solved_percent = SolvedPacks.objects.get(pack_id=pack_id)
+                return Response({"percent": solved_percent.percent},
+                                status=status.HTTP_200_OK)
+
+            except Pack.DoesNotExist:
+                return Response({'error': 'Pack not found'},
+                                status=status.HTTP_404_NOT_FOUND)
+
+        return Response({'error': 'pack_id is required'},
+                        status=status.HTTP_400_BAD_REQUEST)
+
     def post(self, request):
         user = request.user
         pack_id = request.data.get('pack_id')

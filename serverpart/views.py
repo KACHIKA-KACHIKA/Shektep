@@ -79,13 +79,16 @@ class SolvePackAPI(APIView):
 
     def get(self, request):
         pack_id = request.GET.get('pack_id')
+        user = request.user
         if pack_id:
             try:
-                solved_percent = SolvedPacks.objects.get(pack_id=pack_id)
-                return Response({"percent": solved_percent.percent},
-                                status=status.HTTP_200_OK)
+                solved_pack = SolvedPacks.objects.get(
+                    user=user, pack_id=pack_id)
+                if solved_pack:
+                    return Response({"percent": solved_pack.percent},
+                                    status=status.HTTP_200_OK)
 
-            except Pack.DoesNotExist:
+            except SolvedPacks.DoesNotExist:
                 return Response({'error': 'Pack not found'},
                                 status=status.HTTP_404_NOT_FOUND)
 

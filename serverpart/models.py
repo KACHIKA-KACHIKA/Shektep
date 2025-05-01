@@ -53,9 +53,9 @@ class Task(models.Model):
 
     def task_image_preview(self):
         if self.task_image:
-            return mark_safe(
-                f'< img src="{self.task_image.url}" \
-                width="376" height="120" / >')
+            return mark_safe(f'<img src="{self.task_image.url}"\
+                              width="376" height="120" />')
+
         return "(No image)"
 
     task_image_preview.short_description = "Task Image Preview"

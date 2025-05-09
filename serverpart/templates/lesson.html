@@ -3,7 +3,6 @@
 <div class="lesson-container">
 
 	{% if user.is_authenticated %}
-	{% if has_course_access %}
 	<h4 id="lesson-title">Видеоурок</h4>
 	<div class="lesson-video-container">
 		<div style="display: flex; width: 100%; flex-wrap: wrap;">
@@ -34,12 +33,6 @@
 	{% else %}
 	<div class="auth-warning">
 		<h2>Доступ закрыт</h2>
-		<p>У вас нет доступа к курсу. Оформите подписку, чтобы получить доступ.</p>
-	</div>
-	{% endif %}
-	{% else %}
-	<div class="auth-warning">
-		<h2>Доступ закрыт</h2>
 		<p>Для просмотра личного кабинета необходимо <a href="{% url 'login' %}">войти в аккаунт</a>.</p>
 	</div>
 	{% endif %}
@@ -56,7 +49,6 @@
 			return;
 		}
 
-		// Слушаем событие скачивания материалов
 		const practiceLink = document.getElementById("practice-link");
 		const theoryLink = document.getElementById("theory-link");
 		const videoElement = document.getElementById("lesson-video");
@@ -70,7 +62,7 @@
 		});
 
 		videoElement.addEventListener("ended", function () {
-			updateLessonProgress(lessonId, 'video_rating', 5); // Например, ставим максимальную оценку
+			updateLessonProgress(lessonId, 'video_rating', 5);
 		});
 
 		fetch(`/api/lesson/?lesson_id=${lessonId}`)
@@ -79,7 +71,6 @@
 			.catch(error => console.error("Ошибка загрузки урока:", error));
 	});
 
-	// Функция для обновления/создания прогресса пользователя
 	function updateLessonProgress(lessonId, field, value) {
 		if (!lessonId || !field || value === undefined) {
 			console.error("Некорректные данные для запроса", { lessonId, field, value });

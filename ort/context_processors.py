@@ -1,7 +1,5 @@
-from datetime import timedelta
 from django.utils.timezone import now
 from user.models import SubscriptionList
-
 
 def subscription_data(request):
     active_subscription = None
@@ -9,22 +7,22 @@ def subscription_data(request):
 
     if request.user.is_authenticated:
         subscriptions = SubscriptionList.objects.filter(
-            user=request.user).order_by('-timestamp')
-
+            user=request.user
+        ).select_related('subscription').prefetch_related('subscription__access_rights').order_by('-timestamp')
+        print(subscriptions)
         for sub in subscriptions:
             try:
-                # Преобразуем duration в timedelta
-                duration = timedelta(
-                    seconds=sub.subscription.duration.total_seconds())
-
-                # Ищем подписку ровно на 30 дней
-                if duration == timedelta(days=30):
-                    active_subscription = sub
-                    start_date = sub.timestamp
-                    end_date = (start_date + duration).date()
-                    break  # Берем только первую найденную подписку
+                access_names = {access.name for access in sub.subscription.access_rights.all()}
+                print(access_names)
+                if 'Подписка' in access_names:
+                    start = sub.timestamp
+                    end = start + sub.subscription.duration
+                    if now() <= end:
+                        active_subscription = sub
+                        end_date = end.date()
+                        break
             except AttributeError:
-                continue  # Если duration не преобразуется, пропускаем
+                continue
 
     return {
         'active_subscription': active_subscription,

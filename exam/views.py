@@ -4,12 +4,10 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 
-from user.permissions import HasAccessToExams
+from user.permissions import get_user_active_access_rights
 
 
 class ExamAPI(APIView):
-    permission_classes = [HasAccessToExams]
-
     def get(self, request):
         exam_id = request.GET.get('exam_id')
         if not exam_id:
@@ -21,6 +19,11 @@ class ExamAPI(APIView):
         except Exam.DoesNotExist:
             return Response({'error': 'Exam not found'},
                             status=status.HTTP_404_NOT_FOUND)
+
+        user_rights = get_user_active_access_rights(request.user)
+        if not user_rights.filter(id__in=exam.access_rights.all()).exists():
+            return Response({'error': 'Нет доступа'},
+                            status=status.HTTP_403_FORBIDDEN)
 
         exam_data = {
             'id': exam.id,
@@ -48,22 +51,24 @@ class ExamAPI(APIView):
 
 
 class SolvedExamAPI(APIView):
-    permission_classes = [HasAccessToExams]
-
     def get(self, request):
-        try:
-            exams = SolvedExam.objects.filter(user=request.user)
-        except SolvedExam.DoesNotExist:
-            return Response({'error': 'Exam not found'},
-                            status=status.HTTP_404_NOT_FOUND)
+        user = request.user
+        exams = SolvedExam.objects.filter(user=user).select_related('exam')
+        user_rights = get_user_active_access_rights(user)
+        accessible_exam_ids = []
+        for solved in exams:
+            exam = solved.exam
+            if user_rights.filter(id__in=exam.access_rights.all()).exists():
+                accessible_exam_ids.append(exam.id)
 
-        solved_exams = exams.values_list('exam_id', flat=True)
-        return Response({"solved_exams": solved_exams},
+        return Response({"solved_exams": accessible_exam_ids},
                         status=status.HTTP_200_OK)
 
 
 class CorrectExamAPI(APIView):
-    permission_classes = [HasAccessToExams]
+    def has_exam_access(self, user, exam):
+        user_rights = get_user_active_access_rights(user)
+        return user_rights.filter(id__in=exam.access_rights.all()).exists()
 
     def post(self, request):
         user = request.user
@@ -75,6 +80,11 @@ class CorrectExamAPI(APIView):
 
         try:
             exam = Exam.objects.get(pk=exam_id)
+
+            if not self.has_exam_access(user, exam):
+                return Response({"error": "Access denied"},
+                                status=status.HTTP_403_FORBIDDEN)
+
             solved_exam, created = SolvedExam.objects.get_or_create(
                 user=user, exam=exam)
 
@@ -88,7 +98,6 @@ class CorrectExamAPI(APIView):
         except Exam.DoesNotExist:
             return Response({"error": "Invalid exam_id"},
                             status=status.HTTP_404_NOT_FOUND)
-
         except Exception as e:
             return Response({"error": str(e)},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -102,29 +111,43 @@ class CorrectExamAPI(APIView):
                             status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            solved_exam = SolvedExam.objects.get(user=user, exam__id=exam_id)
+            exam = Exam.objects.get(pk=exam_id)
+
+            if not self.has_exam_access(user, exam):
+                return Response({"error": "Access denied"},
+                                status=status.HTTP_403_FORBIDDEN)
+
+            solved_exam = SolvedExam.objects.get(user=user, exam=exam)
             solved_exam.delete()
             return Response({"success": "Solved exam deleted"},
                             status=status.HTTP_204_NO_CONTENT)
 
+        except Exam.DoesNotExist:
+            return Response({"error": "Invalid exam_id"},
+                            status=status.HTTP_404_NOT_FOUND)
         except SolvedExam.DoesNotExist:
             return Response({"error": "Solved exam not found"},
                             status=status.HTTP_404_NOT_FOUND)
-
         except Exception as e:
             return Response({"error": str(e)},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class DifficultyAPI(APIView):
-    permission_classes = [HasAccessToExams]
-
     def get(self, request):
         exam_id = request.GET.get('exam_id')
         if not exam_id:
             return Response({'error': 'exam_id is required'},
                             status=status.HTTP_400_BAD_REQUEST)
-
+        try:
+            exam = Exam.objects.get(id=exam_id)
+        except Exam.DoesNotExist:
+            return Response({'error': 'Exam not found'},
+                            status=status.HTTP_404_NOT_FOUND)
+        user_rights = get_user_active_access_rights(request.user)
+        if not user_rights.filter(id__in=exam.access_rights.all()).exists():
+            return Response({'error': 'Нет доступа'},
+                            status=status.HTTP_403_FORBIDDEN)
         try:
             difficulty_id = Exam.objects.filter(pk=exam_id).values(
                 'difficulty').first()['difficulty']
@@ -147,11 +170,15 @@ class DifficultyAPI(APIView):
 
 
 class ExamsAPI(APIView):
-    permission_classes = [HasAccessToExams]
-
     def get(self, request):
-        exams = Exam.objects.filter(is_published=True).values(
-            'id', 'difficulty_id', 'name', 'created_at')
+        user = request.user
+        user_rights = get_user_active_access_rights(user)
+        exams = Exam.objects.filter(
+            is_published=True,
+            access_rights__in=user_rights
+        ).distinct().values(
+            'id', 'difficulty_id', 'name', 'created_at'
+        )
 
         if not exams.exists():
             return Response({'error': 'No exams available at the moment'},

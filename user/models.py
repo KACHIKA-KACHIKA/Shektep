@@ -1,10 +1,18 @@
 from django.db import models
 from django.contrib.auth.models import User
-from videoplayer.models import Video
-from serverpart.models import Pack
+
+
+class AccessRight(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+
+    def __str__(self):
+        return self.name
+
+
 from exam.models import Exam
-
-
+from serverpart.models import Pack
+from videoplayer.models import Video
 class Lesson(models.Model):
     title = models.CharField(max_length=255)
     is_published = models.BooleanField(default=False)
@@ -17,6 +25,7 @@ class Lesson(models.Model):
     practice = models.FileField(upload_to="practices/", null=True, blank=True)
     theory = models.FileField(upload_to="theories/", null=True, blank=True)
     upload_date = models.DateField(null=True, blank=True)
+    access_rights = models.ManyToManyField(AccessRight, blank=True)
 
     def __str__(self):
         return f"Урок {self.title}"
@@ -32,14 +41,6 @@ class UserLessonProgress(models.Model):
     downloaded_practice = models.BooleanField(
         default=False)
     downloaded_theory = models.BooleanField(default=False)
-
-
-class AccessRight(models.Model):
-    name = models.CharField(max_length=100)
-    description = models.TextField()
-
-    def __str__(self):
-        return self.name
 
 
 class Subscription(models.Model):

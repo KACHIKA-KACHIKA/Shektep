@@ -22,6 +22,7 @@
 
 </div>
 <script>
+	const userIsAuthenticated = {{user_is_authenticated|yesno:"true,false"}};
 	document.addEventListener('DOMContentLoaded', function () {
 		const urlParams = new URLSearchParams(window.location.search);
 		const packId = urlParams.get('pack_id');
@@ -68,9 +69,8 @@
 			imgElement.src = imageUrl;
 			imgElement.classList.add('reading-text-image');
 
-			// Добавляем обработчик на клик для открытия изображения
 			imgElement.addEventListener('click', function () {
-				openModal(imageUrl); // Открываем модальное окно с изображением
+				openModal(imageUrl);
 			});
 
 			imagesContainer.appendChild(imgElement);
@@ -79,17 +79,13 @@
 		textBlock.prepend(imagesContainer);
 	}
 
-	// Функция для открытия модального окна
 	function openModal(imageUrl) {
 		const modal = document.getElementById('image-modal');
 		const modalImage = document.getElementById('modal-image');
-		console.log("imageUrl for modal w", imageUrl);
 		modalImage.src = imageUrl;
-		modal.style.display = 'flex'; // Показываем модальное окно
-
+		modal.style.display = 'flex';
 		const closeBtn = document.getElementById('close-modal');
 		closeBtn.addEventListener('click', closeModal);
-
 		window.addEventListener('click', function (event) {
 			const modal = document.getElementById('image-modal');
 			if (event.target === modal) {
@@ -98,7 +94,6 @@
 		});
 	}
 
-	// Закрытие модального окна
 	function closeModal() {
 		const modal = document.getElementById('image-modal');
 		modal.style.display = 'none'; // Скрываем модальное окно
@@ -133,19 +128,18 @@
 				} else {
 					examsTextBlock.textContent = 'Ошибка при загрузке видео. Попробуйте позже.';
 				}
-				console.error('Ошибка при загрузке видео:', error);
 			});
 	}
 
 	function renderVideoTimings(videoId) {
 		const timingsContainer = document.getElementById('video-timings');
 
-		fetch(`/api/video_timing/?video_id=${videoId}`)  // Меняем параметр на video_id
+		fetch(`/api/video_timing/?video_id=${videoId}`)
 			.then(response => response.json())
 			.then(data => {
 				const timings = data.timings;
 				if (timings && Object.keys(timings).length > 0) {
-					timingsContainer.innerHTML = ''; // Очистка контейнера перед добавлением таймингов
+					timingsContainer.innerHTML = '';
 					for (let label in timings) {
 						const timingBtn = document.createElement('button');
 						timingBtn.textContent = `${timings[label]} - ${label}`;
@@ -157,7 +151,7 @@
 							const [hours, minutes, seconds] = timings[label].split(':').map(Number);
 							const newTime = hours * 3600 + minutes * 60 + seconds;
 							videoElement.currentTime = newTime;
-							videoElement.play(); // Запуск видео после перемотки
+							videoElement.play();
 						});
 
 						timingsContainer.appendChild(timingBtn);
@@ -179,7 +173,7 @@
 		var totalTasks = document.querySelectorAll('.task').length;
 		var selectedTasks = radioButtons.length;
 
-		if (selectedTasks === 0) {  // Проверка количества отвеченных заданий
+		if (selectedTasks === 0) {
 			return;
 		}
 
@@ -192,7 +186,9 @@
 		const packId = urlParams.get('pack_id');
 
 		checkAndSaveCorrectAnswers(packId, selectedAnswers);
-		renderVideo(packId);
+		if (userIsAuthenticated) {
+			renderVideo(packId);
+		}
 		if (packId) {
 			fetch(`/api/task_answer/?pack_id=${packId}`)
 				.then(response => {
@@ -208,7 +204,7 @@
 						var finishButton = document.querySelector('.btn-endtest .btn-primary');
 						finishButton.textContent = 'Вернуться';
 						finishButton.onclick = function () {
-							window.location.href = "{% url 'home' %}";
+							window.location.href = "{% url 'tests' %}";
 						};
 						finishButton.setAttribute('type', 'button');
 					} else {
@@ -285,6 +281,9 @@
 		const urlParams = new URLSearchParams(window.location.search);
 		const packId = urlParams.get('pack_id');
 
+		if (!userIsAuthenticated) {
+			return;
+		}
 		fetch(`/api/task/?pack_id=${packId}`)
 			.then(response => {
 				if (!response.ok) {
@@ -321,12 +320,15 @@
 						}
 						return response.json();
 					})
-					.then(data => console.log('Результаты сохранены:', data))
 					.catch(error => console.error('Ошибка при сохранении результатов:', error));
+
 			});
 	}
 
 	async function checkAndSaveCorrectAnswers(packId, userAnswers) {
+		if (!userIsAuthenticated) {
+			return;
+		}
 		try {
 			const response = await fetch(`/api/task_answer/?pack_id=${packId}`);
 			if (!response.ok) throw new Error("Ошибка загрузки ответов");
@@ -359,7 +361,6 @@
 	function renderTasks(tasks) {
 		var tasksContainer = document.querySelector('.main-content-test');
 		var index = 1;
-		// Цикл для создания элементов заданий
 		tasks.forEach(function (task) {
 			var taskDiv = document.createElement('div');
 			taskDiv.classList.add('task');
@@ -416,18 +417,12 @@
 			fadeInBlocks.forEach(block => {
 				const blockPosition = block.getBoundingClientRect().top;
 				const windowHeight = window.innerHeight;
-
-				// Проверяем, виден ли блок на экране
 				if (blockPosition < windowHeight + 100) {
 					block.classList.add('visible');
 				}
 			});
 		}
-
-		// Выполняем проверку при прокрутке
 		window.addEventListener('scroll', handleScroll);
-
-		// Выполняем проверку при загрузке страницы
 		handleScroll();
 	}
 

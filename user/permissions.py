@@ -1,47 +1,13 @@
 from django.utils import timezone
 from rest_framework.permissions import BasePermission
 from django.db import models
+from django.db.models import F
 from .models import AccessRight, SubscriptionList
 
-
-class HasAccessToBlock(BasePermission):
-    access_name = None
-
-    def has_permission(self, request, view):
-        if not self.access_name:
-            raise ValueError("Необходимо задать access_name для доступа")
-
-        user = request.user
-        if user.is_authenticated:
-            required_access = AccessRight.objects.filter(
-                name=self.access_name).first()
-            if not required_access:
-                return False
-
-            active_subscriptions = SubscriptionList.objects.filter(
-                user=user,
-                timestamp__lte=timezone.now(),
-                timestamp__gte=timezone.now()
-                - models.F('subscription__duration')
-            )
-
-            for sub in active_subscriptions:
-                if required_access in sub.subscription.access_rights.all():
-                    return True
-        return False
-
-
-class HasAccessToVideo(HasAccessToBlock):
-    access_name = "Доступ к видео"
-
-
-class HasAccessToTestResults(HasAccessToBlock):
-    access_name = "Доступ к результатам"
-
-
-class HasAccessToExams(HasAccessToBlock):
-    access_name = "Доступ к экзаменам"
-
-
-class HasAccessToCourse(HasAccessToBlock):
-    access_name = "Доступ к курсу"
+def get_user_active_access_rights(user):
+    now = timezone.now()
+    return AccessRight.objects.filter(
+        subscription__subscriptionlist__user=user,
+        subscription__subscriptionlist__timestamp__lte=now,
+        subscription__subscriptionlist__timestamp__gte=now - F('subscription__duration')
+    ).distinct()

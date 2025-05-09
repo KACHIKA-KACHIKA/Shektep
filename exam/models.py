@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from serverpart.models import Pack
+from user.models import AccessRight
 
 
 class Exam(models.Model):
@@ -28,6 +29,7 @@ class Exam(models.Model):
         Pack, on_delete=models.SET_NULL, null=True,
         blank=True, related_name="practical_rus")
     created_at = models.DateTimeField(auto_now_add=True)
+    access_rights = models.ManyToManyField(AccessRight, blank=True)
 
     def __str__(self):
         return f"Экзамен {self.name}"

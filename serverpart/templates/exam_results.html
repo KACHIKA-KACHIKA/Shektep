@@ -4,9 +4,7 @@
 	{% csrf_token %}
 
 	<div class="exams-container">
-		<!-- Контейнер для отображения шкал прогресса -->
 		<div class="exams-textblock" id="results-container">
-			<!-- Шкалы прогресса будут добавляться сюда динамически -->
 		</div>
 	</div>
 
@@ -24,19 +22,17 @@
 		if (results && examId) {
 			const sectionResults = JSON.parse(decodeURIComponent(results));
 
-			// Запрашиваем данные о минимальных результатах (goal) по сложности
 			fetch(`/api/difficulty/?exam_id=${examId}`)
 				.then(response => response.json())
 				.then(data => {
 					const difficultyGoals = {
 						"1": data.difficulty_data.goal_math_1,
 						"2": data.difficulty_data.goal_math_2,
-						"3": data.difficulty_data.goal_analogy + data.difficulty_data.goal_addition, // Объединенная цель
+						"3": data.difficulty_data.goal_analogy + data.difficulty_data.goal_addition,
 						"4": data.difficulty_data.goal_reading,
 						"5": data.difficulty_data.goal_practical_rus
 					};
 
-					// Названия секций
 					const sectionNames = {
 						"1": "Математика 1 часть",
 						"2": "Математика 2 часть",
@@ -45,64 +41,39 @@
 						"5": "Практическая грамматика русского языка"
 					};
 
-					// Контейнер для добавления шкал
 					const resultsContainer = document.getElementById('results-container');
 					let isPassed = true;
-					// Генерируем шкалы для каждого раздела
 					Object.keys(sectionResults).forEach(stage => {
 						const correctAnswersCount = sectionResults[stage];
 						const goal = difficultyGoals[stage] || 0;
-						const maxTasks = 30;  // Максимум заданий для шкалы
+						const maxTasks = 30;
 
-						// Создаем контейнер для каждой секции
 						const sectionDiv = document.createElement('div');
 						sectionDiv.classList.add('section-result');
-
-						// Название секции
 						const sectionTitle = document.createElement('h3');
 						sectionTitle.textContent = sectionNames[stage] || `Раздел ${stage}`;
 						sectionDiv.appendChild(sectionTitle);
-
-						// Создаем контейнер для прогресс-бара
 						const progressBarContainer = document.createElement('div');
 						progressBarContainer.classList.add('progress-bar-container');
-
-						// Создаем сам прогресс-бар
 						const progressBar = document.createElement('div');
 						progressBar.classList.add('progress-bar');
-
-						// Добавляем текст (сколько правильных из общего числа задач)
 						progressBar.textContent = `${correctAnswersCount}/${maxTasks} правильных`;
-
-						// Добавляем прогресс-бар внутрь контейнера
 						progressBarContainer.appendChild(progressBar);
-
-						// Вставляем прогресс-бар на страницу
 						sectionDiv.appendChild(progressBarContainer);
-
-						// Рассчитываем процент выполнения
 						const solvedPercent = (correctAnswersCount / maxTasks) * 100;
-
-						// Задержка для плавного заполнения шкалы прогресса
 						setTimeout(() => {
-							progressBar.style.width = `${solvedPercent}%`; // Устанавливаем ширину в зависимости от процента
-						}, 100); // Небольшая задержка для плавного запуска анимации
+							progressBar.style.width = `${solvedPercent}%`;
+						}, 100);
 
-
-						// Минимум правильных ответов
 						const goalText = document.createElement('p');
 						goalText.textContent = `Минимум для прохождения: ${goal}`;
 						sectionDiv.appendChild(goalText);
-						// Проверяем, прошел ли раздел
 						if (correctAnswersCount < goal) {
-							isPassed = false; // Если хотя бы один раздел не пройден
+							isPassed = false;
 						}
-						// Добавляем все в основной контейнер
 						resultsContainer.appendChild(sectionDiv);
 					});
-					// Отправка результатов экзамена
 					if (isPassed) {
-						// Экзамен пройден, отправляем ID экзамена
 						fetch('/api/solve_exam/', {
 							method: 'POST',
 							headers: {

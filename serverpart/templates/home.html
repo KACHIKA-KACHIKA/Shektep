@@ -4,7 +4,7 @@
 	<h4>Личный кабинет</h4>
 
 	{% if user.is_authenticated %}
-	{% if has_course_access %}
+	{% if "Курс 2025" in access_rights %}
 	<div class="schedule-container">
 		<h2>Расписание</h2>
 		<img src="/static/media/home/shedule_march.jpg" alt="Тут должно быть расписание, но что-то пошло не так(">
@@ -40,10 +40,7 @@
 		</div>
 	</div>
 	{% else %}
-	<div class="auth-warning">
-		<h2>Доступ закрыт</h2>
-		<p>У вас нет доступа к курсу. Оформите подписку, чтобы получить доступ.</p>
-	</div>
+	<p>В личном кабинете отображаются доступные курсы</p>
 	{% endif %}
 	{% else %}
 	<div class="auth-warning">
@@ -56,11 +53,14 @@
 
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
-		renderExamResults();
+		const lessonsBlock = document.querySelector(".lessons-block");
+		const progressBar = document.querySelector(".progress-bar");
+
+		if (!lessonsBlock || !progressBar) return;
+
 		fetch("/api/lessons/")
 			.then(response => response.json())
 			.then(data => {
-				console.log(data);
 				let totalTasks = 0;
 				let solvedTasks = 0;
 
@@ -68,23 +68,19 @@
 					totalTasks += lesson.total_tasks;
 					solvedTasks += lesson.solved_tasks;
 				});
-
-				const progressBar = document.querySelector('.progress-bar');
 				setTimeout(() => {
 					progressBar.style.width = `${(solvedTasks / totalTasks) * 100}%`;
 					progressBar.innerText = `${solvedTasks}/${totalTasks}`;
 				}, 200);
-				const lessonsBlock = document.querySelector(".lessons-block");
 				if (data.length > 0) {
+					renderExamResults();
 					lessonsBlock.innerHTML = "";
-
 					data.forEach(lesson => {
 						const lessonItem = document.createElement("a");
 						lessonItem.classList.add("lesson-item");
 						lessonItem.classList.add('fade-in-block', 'bottom');
 						lessonItem.href = `/lesson/?lesson_id=${lesson.id}`;
 						lessonItem.innerHTML = `${lesson.title} - ${lesson.upload_date}`;
-
 						lessonsBlock.appendChild(lessonItem);
 					});
 				} else {
@@ -160,20 +156,17 @@
 	async function renderExamResults() {
 		const examIds = [11, 12, 0, 0]; // ID пробников
 		const tableBody = document.querySelector("#exam-results tbody");
-		tableBody.innerHTML = ""; // Очищаем таблицу перед вставкой данных
+		tableBody.innerHTML = "";
 
 		const resultsRow = document.createElement("tr");
-		// resultsRow.classList.add('fade-in-block', 'bottom');
-
 		const solvedExams = await fetchSolvedExams();
-
 		examIds.forEach(examId => {
 			const scoreCell = document.createElement("td");
 			if (examId === 0) {
 				scoreCell.textContent = "Ждем)";
 			} else {
 				const examLink = document.createElement("a");
-				scoreCell.style.color = "#777"; // Серый цвет
+				scoreCell.style.color = "#777";
 				scoreCell.style.fontWeight = "bold";
 				if (!solvedExams.includes(examId)) {
 					examLink.textContent = "0 б.";
@@ -183,7 +176,6 @@
 
 				}
 				scoreCell.appendChild(examLink);
-
 				fetchExamScore(examId, examLink);
 			}
 
@@ -213,7 +205,6 @@
 	]; // 30 задач → 57 баллов
 
 	function getScore(solved, scoreTable) {
-		// Проверка, если количество решённых задач больше, чем максимальное количество в таблице
 		return solved < scoreTable.length ? scoreTable[solved] : scoreTable[scoreTable.length - 1];
 	}
 
@@ -235,19 +226,12 @@
 			fadeInBlocks.forEach(block => {
 				const blockPosition = block.getBoundingClientRect().top;
 				const windowHeight = window.innerHeight;
-
-				// if (blockPosition < windowHeight) {
-					block.classList.add('visible');
-				// }
+				block.classList.add('visible');
 			});
 		}
 
 		window.addEventListener('scroll', handleScroll);
 		handleScroll();
 	}
-
-
 </script>
-
-
 {% endblock %}

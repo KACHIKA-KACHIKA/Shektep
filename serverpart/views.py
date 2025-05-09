@@ -4,8 +4,9 @@ from .models import Section, Task, Subsection, Pack, SolvedTasks, SolvedPacks
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
-from user.permissions import HasAccessToTestResults, HasAccessToCourse
+from user.permissions import get_user_active_access_rights
 from user.models import Lesson, UserLessonProgress
 from user.serializers import LessonsSerializer
 
@@ -23,8 +24,6 @@ class TaskAPI(APIView):
             subsection = Subsection.objects.filter(
                 id=pack.subsection_id).values('name').first()
             subsection_name = subsection['name'] if subsection else None
-
-            # Формируем список задач
             tasks_data = [
                 {
                     'id': task.id,
@@ -34,8 +33,6 @@ class TaskAPI(APIView):
                 }
                 for task in tasks
             ]
-
-            # Проверяем, если подраздел называется "Чтение и понимание текста"
             reading_images = []
             if subsection_name == "Чтение и понимание текста":
                 reading_images = [
@@ -44,7 +41,7 @@ class TaskAPI(APIView):
 
             return Response({
                 'tasks_data': tasks_data,
-                'reading_images': reading_images  # Добавляем картинки текста
+                'reading_images': reading_images
             }, status=status.HTTP_200_OK)
 
         except Pack.DoesNotExist:
@@ -57,54 +54,87 @@ class PackAPI(APIView):
         subsection_id = request.GET.get('subsection_id')
         user = request.user
 
-        packs_data = Pack.objects.filter(
-            subsection_id=subsection_id, is_published=True).values('id')
+        if not subsection_id:
+            return Response({'error': 'subsection_id is required'}, status=400)
 
-        if HasAccessToTestResults().has_permission(request, self):
-            solved_packs = SolvedPacks.objects.filter(
-                user=user, pack__in=[pack['id'] for pack in packs_data])
-            solved_dict = {
-                solved.pack_id: solved.percent for solved in solved_packs}
-            for pack in packs_data:
-                pack['solved_percent'] = solved_dict.get(pack['id'], 0)
-        else:
-            for pack in packs_data:
-                pack['solved_percent'] = 0
+        packs = Pack.objects.filter(
+            subsection_id=subsection_id,
+            is_published=True
+        ).prefetch_related('access_rights')
 
-        return Response(list(packs_data))
+        user_rights = set()
+        solved_map = {}
+
+        if user.is_authenticated:
+            user_rights = set(get_user_active_access_rights(user))
+            solved_packs = SolvedPacks.objects.filter(user=user)
+            solved_map = {sp.pack_id: sp.percent for sp in solved_packs}
+
+        result = []
+        for pack in packs:
+            has_access = bool(set(pack.access_rights.all()) & user_rights)
+            result.append({
+                'id': pack.id,
+                'solved_percent': solved_map.get(pack.id, 0) if has_access else 0
+            })
+
+        return Response(result, status=200)
 
 
 class SolvePackAPI(APIView):
-    permission_classes = [HasAccessToTestResults]
-
     def get(self, request):
         pack_id = request.GET.get('pack_id')
         user = request.user
-        if pack_id:
-            try:
-                solved_pack = SolvedPacks.objects.get(
-                    user=user, pack_id=pack_id)
-                if solved_pack:
-                    return Response({"percent": solved_pack.percent},
-                                    status=status.HTTP_200_OK)
 
-            except SolvedPacks.DoesNotExist:
-                return Response({'error': 'Pack not found'},
-                                status=status.HTTP_404_NOT_FOUND)
+        if not pack_id:
+            return Response({'error': 'pack_id is required'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if not user.is_authenticated:
+            return Response({"error": "User is not authenticated"},
+                            status=status.HTTP_403_FORBIDDEN)
+        try:
+            pack = Pack.objects.prefetch_related(
+                'access_rights').get(id=pack_id)
 
-        return Response({'error': 'pack_id is required'},
-                        status=status.HTTP_400_BAD_REQUEST)
+            user_rights = set(get_user_active_access_rights(user))
+            pack_rights = set(pack.access_rights.all())
+
+            if not user_rights & pack_rights:
+                return Response({'error': 'Access denied'},
+                                status=status.HTTP_403_FORBIDDEN)
+        except Pack.DoesNotExist:
+            return Response({'error': 'Pack not found'},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            solved_pack = SolvedPacks.objects.get(user=user, pack=pack)
+            return Response({"percent": solved_pack.percent},
+                            status=status.HTTP_200_OK)
+        except SolvedPacks.DoesNotExist:
+            return Response({'error': 'Solved data not found'},
+                            status=status.HTTP_404_NOT_FOUND)
 
     def post(self, request):
         user = request.user
         pack_id = request.data.get('pack_id')
         solved_percent = request.data.get('solved_percent')
+        if not user.is_authenticated:
+            return Response({"error": "User is not authenticated"},
+                            status=status.HTTP_403_FORBIDDEN)
 
         if not pack_id or solved_percent is None:
             return Response({"error": "Нужен pack_id и solved_percent."},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        pack = get_object_or_404(Pack, id=pack_id)
+        pack = get_object_or_404(
+            Pack.objects.prefetch_related('access_rights'), id=pack_id)
+
+        user_rights = set(get_user_active_access_rights(user))
+        pack_rights = set(pack.access_rights.all())
+
+        if not user_rights & pack_rights:
+            return Response({'error': 'Access denied'},
+                            status=status.HTTP_403_FORBIDDEN)
 
         solved_pack, created = SolvedPacks.objects.get_or_create(
             user=user,
@@ -149,26 +179,35 @@ class SubsectionAPI(APIView):
 
 
 class LessonsAPIView(APIView):
-    permission_classes = [HasAccessToCourse]
-
     def get(self, request):
-        lessons = Lesson.objects.filter(is_published=True).order_by(
-            '-upload_date')  # Сортируем по дате
+        user = request.user
+        user_rights = set(get_user_active_access_rights(user))
+
+        lessons = Lesson.objects.filter(is_published=True).prefetch_related(
+            'access_rights').order_by('-upload_date')
+        accessible_lessons = [lesson for lesson in lessons if set(
+            lesson.access_rights.all()) & user_rights]
+
         serializer = LessonsSerializer(
-            lessons, many=True, context={'request': request})
+            accessible_lessons, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class LessonDetailAPIView(APIView):
-    permission_classes = [HasAccessToCourse]
-
     def get(self, request):
         lesson_id = request.GET.get("lesson_id")
 
         if not lesson_id:
             return Response({"error": "lesson_id is required"}, status=400)
 
-        lesson = get_object_or_404(Lesson, id=lesson_id)
+        lesson = get_object_or_404(
+            Lesson.objects.prefetch_related('access_rights'), id=lesson_id)
+
+        user_rights = set(get_user_active_access_rights(request.user))
+        lesson_rights = set(lesson.access_rights.all())
+
+        if not user_rights & lesson_rights:
+            return Response({"error": "Access denied"}, status=403)
 
         data = {
             "title": lesson.title,
@@ -184,21 +223,27 @@ class LessonDetailAPIView(APIView):
 
 
 class UserLessonProgressView(APIView):
-    permission_classes = [HasAccessToTestResults]
-
     def post(self, request):
-        user_id = request.user.id
+        user = request.user
         lesson_id = request.data.get('lesson')
         field = request.data.get('field')
         value = request.data.get('value')
-        if not user_id or not lesson_id or not field or value is None:
+
+        if not lesson_id or not field or value is None:
             return Response({'error': 'Некорректные данные'},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        # Ищем существующую запись или создаем новую
+        lesson = get_object_or_404(
+            Lesson.objects.prefetch_related('access_rights'), pk=lesson_id)
+        user_rights = set(get_user_active_access_rights(user))
+        lesson_rights = set(lesson.access_rights.all())
+
+        if not user_rights & lesson_rights:
+            return Response({"error": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+
         progress, created = UserLessonProgress.objects.update_or_create(
-            user_id=user_id,
-            lesson_id=lesson_id,
+            user=user,
+            lesson=lesson,
             defaults={field: value}
         )
 
@@ -206,10 +251,11 @@ class UserLessonProgressView(APIView):
 
 
 def lesson(request):
-    permission_instance = HasAccessToCourse()  # Создаем экземпляр класса
-    has_access = permission_instance.has_permission(
-        request, view=None)  # Передаем None для view
-    return render(request, 'lesson.html', {'has_course_access': has_access})
+    if not request.user.is_authenticated:
+        return render(request, 'lesson.html', {'access_rights': []})
+    user_access = get_user_active_access_rights(request.user)
+    access_rights = [ar.name for ar in user_access]
+    return render(request, 'lesson.html', {'access_rights': access_rights})
 
 
 def landing(request):
@@ -217,14 +263,21 @@ def landing(request):
 
 
 def home(request):
-    permission_instance = HasAccessToCourse()  # Создаем экземпляр класса
-    has_access = permission_instance.has_permission(
-        request, view=None)  # Передаем None для view
-    return render(request, 'home.html', {'has_course_access': has_access})
+    if not request.user.is_authenticated:
+        return render(request, 'home.html', {'access_rights': []})
+
+    user_access = get_user_active_access_rights(request.user)
+    access_rights = [ar.name for ar in user_access]
+    return render(request, 'home.html', {
+        'access_rights': access_rights,
+    })
 
 
 def test(request):
-    return render(request, 'test.html')
+    context = {
+        "user_is_authenticated": request.user.is_authenticated,
+    }
+    return render(request, 'test.html', context)
 
 
 def test_creation_page(request):
@@ -233,10 +286,8 @@ def test_creation_page(request):
     return render(request, 'testcreation.html',
                   {'sections': sections, 'subsections': subsections})
 
-
-# Don't use
 class CorrectTaskAPI(APIView):
-    permission_classes = [HasAccessToTestResults]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user

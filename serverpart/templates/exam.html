@@ -17,7 +17,6 @@
 	</div>
 </div>
 <script>
-	// Текущий этап
 	let currentStage = 1;
 	let sectionResults = {
 		"1": 0,  // Математика 1 часть
@@ -134,10 +133,8 @@
 			const imgElement = document.createElement('img');
 			imgElement.src = imageUrl;
 			imgElement.classList.add('reading-text-image');
-
-			// Добавляем обработчик на клик для открытия изображения
 			imgElement.addEventListener('click', function () {
-				openModal(imageUrl); // Открываем модальное окно с изображением
+				openModal(imageUrl);
 			});
 
 			imagesContainer.appendChild(imgElement);
@@ -171,18 +168,15 @@
 		const section = sectionIds[currentStage];
 		if (section) {
 			const tasksContainer = document.querySelector('.main-content-test');
-			tasksContainer.innerHTML = '';  // Очищаем контейнер
+			tasksContainer.innerHTML = '';
 
-			// Функция для загрузки и отображения данных одного теста
 			const loadTaskData = async (taskId) => {
 				try {
 					const response = await fetch(`/api/task/?pack_id=${taskId}`);
 					const data = await response.json();
-
 					const readingImages = data.reading_images || [];
 					const tasks = data.tasks_data;
 
-					// Отображаем картинки и задания для текущего теста
 					if (readingImages.length > 0) {
 						renderReadingImages(readingImages);
 					}
@@ -191,20 +185,15 @@
 					console.error('Ошибка при загрузке задания:', error);
 				}
 			};
-
-			// Функция для поочередной загрузки заданий
 			const loadTasksSequentially = async () => {
 				for (let i = 0; i < section.length; i++) {
 					await loadTaskData(section[i]);
 				}
 
-				// Меняем текст кнопки и добавляем обработчик после загрузки всех разделов
 				const startButton = document.getElementById('startSectionButton');
 				startButton.textContent = 'Сдать раздел';
 				startButton.onclick = finishSection;
 			};
-
-			// Начинаем поочередную загрузку
 			loadTasksSequentially();
 
 			startExamTimer(sectionDurations[currentStage]);
@@ -218,7 +207,6 @@
 		const packIds = sectionIds[currentStage];
 
 		try {
-			// Запрашиваем правильные ответы для всех pack_id
 			const taskAnswerPromises = packIds.map(id =>
 				fetch(`/api/task_answer/?pack_id=${id}`).then(response => response.json())
 			);
@@ -234,11 +222,10 @@
 				const correctAnswer = allCorrectAnswers.find(ans => ans.id === parseInt(answer.task_id));
 				if (correctAnswer && correctAnswer.answer === answer.selectedAnswer) {
 					correctAnswersCount++;
-					userCorrectAnswers.push({ task_id: answer.task_id }); // Сохраняем для отправки
+					userCorrectAnswers.push({ task_id: answer.task_id });
 				}
 			});
 
-			// Сохраняем правильно решенные задачи
 			for (const task of userCorrectAnswers) {
 				await fetch(`/api/solve_task/`, {
 					method: "POST",
@@ -250,7 +237,6 @@
 				});
 			}
 
-			// Обновляем результаты секции
 			sectionResults[currentStage] = correctAnswersCount;
 			currentStage++;
 
@@ -270,9 +256,8 @@
 	function startExamTimer(durationInMinutes) {
 		let adjustedDuration = durationInMinutes;
 		console.log(document.referrer);
-		// Проверяем, был ли пользователь на /lessons/ перед этим
 		if (document.referrer.includes('/lesson')) {
-			adjustedDuration *= 0.33; // Уменьшаем время вдвое
+			adjustedDuration *= 0.33;
 		}
 
 		const now = Date.now();
@@ -281,7 +266,7 @@
 		updateTimerDisplay();
 	}
 	function updateTimerDisplay() {
-		const timerElement = document.getElementById('examTimer'); // Добавь <div id="examTimer"></div> в HTML
+		const timerElement = document.getElementById('examTimer');
 		if (!timerElement) return;
 
 		function update() {
@@ -290,7 +275,7 @@
 
 			if (remainingTime <= 0) {
 				clearInterval(timerInterval);
-				finishSection(); // Завершаем секцию, если время истекло
+				finishSection();
 			} else {
 				const minutes = Math.floor(remainingTime / 60000);
 				const seconds = Math.floor((remainingTime % 60000) / 1000);
@@ -336,7 +321,6 @@
 		var tasksContainer = document.querySelector('.main-content-test');
 		var index = 1;
 
-		// Цикл для создания элементов заданий
 		tasks.forEach(function (task) {
 			var taskDiv = document.createElement('div');
 			taskDiv.classList.add('task');
@@ -387,23 +371,16 @@
 
 	function PlayAnimation() {
 		const fadeInBlocks = document.querySelectorAll('.fade-in-block');
-
 		function handleScroll() {
 			fadeInBlocks.forEach(block => {
 				const blockPosition = block.getBoundingClientRect().top;
 				const windowHeight = window.innerHeight;
-
-				// Проверяем, виден ли блок на экране
 				if (blockPosition < windowHeight + 100) {
 					block.classList.add('visible');
 				}
 			});
 		}
-
-		// Выполняем проверку при прокрутке
 		window.addEventListener('scroll', handleScroll);
-
-		// Выполняем проверку при загрузке страницы
 		handleScroll();
 	}
 </script>

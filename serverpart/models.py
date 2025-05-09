@@ -6,6 +6,7 @@ from django.dispatch import receiver
 from django.utils.html import mark_safe
 
 from videoplayer.models import Video
+from user.models import AccessRight
 
 
 class Section(models.Model):
@@ -29,6 +30,7 @@ class Pack(models.Model):
     # Закоментить перед первой миграцией
     video = models.ForeignKey(Video, on_delete=models.SET_NULL, null=True,
                               blank=True, related_name='pack_video')
+    access_rights = models.ManyToManyField(AccessRight, blank=True)
 
     def __str__(self):
         return f"Pack: {self.subsection} № {self.id}"

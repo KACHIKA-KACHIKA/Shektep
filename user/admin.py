@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
+from serverpart.admin_utils import make_assign_access_action, make_remove_access_action
 from .models import (Subscription, SubscriptionList,
                      Lesson, UserLessonProgress, AccessRight)
 
@@ -37,5 +38,12 @@ admin.site.register(User, UserAdmin)
 admin.site.register(Subscription)
 admin.site.register(SubscriptionList)
 admin.site.register(AccessRight)
-admin.site.register(Lesson)
+
+@admin.register(Lesson)
+class LessonAdmin(admin.ModelAdmin):
+    actions = [
+        make_assign_access_action(),
+        make_remove_access_action()
+    ]
+
 admin.site.register(UserLessonProgress)

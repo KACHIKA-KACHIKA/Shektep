@@ -69,7 +69,6 @@ def delete_task_images(sender, instance, **kwargs):
     if instance.task_image:
         if os.path.isfile(instance.task_image.path):
             os.remove(instance.task_image.path)
-            print("Удалил " + instance.task_image.path)
 
 
 class ReadingImage(models.Model):

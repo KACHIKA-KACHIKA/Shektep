@@ -9,11 +9,9 @@ def subscription_data(request):
         subscriptions = SubscriptionList.objects.filter(
             user=request.user
         ).select_related('subscription').prefetch_related('subscription__access_rights').order_by('-timestamp')
-        print(subscriptions)
         for sub in subscriptions:
             try:
                 access_names = {access.name for access in sub.subscription.access_rights.all()}
-                print(access_names)
                 if 'Подписка' in access_names:
                     start = sub.timestamp
                     end = start + sub.subscription.duration
